@@ -42,5 +42,7 @@ int CDBOp::CreateDatabase(CString& dbName) {
 	f.WriteLog(CString("created database:") + dbName);*/
 	bool crtDBFilelog = FileOp::WriteRecord(logPath, init);
 
+
+	//cdx
 	return 0;
 }
