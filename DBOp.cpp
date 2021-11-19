@@ -7,7 +7,7 @@
 #include <string>
 using namespace std;
 
-//czh1 modify
+//czhop
 
 int CDBOp::InitDatabase() {
 	//构建数据库dbms__root 文件夹
