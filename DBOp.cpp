@@ -7,6 +7,8 @@
 #include <string>
 using namespace std;
 
+//czh1 modify
+
 int CDBOp::InitDatabase() {
 	//构建数据库dbms__root 文件夹
 	CString folderPath = CString("./dbms_root");
