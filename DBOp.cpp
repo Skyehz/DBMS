@@ -7,17 +7,25 @@
 #include <string>
 using namespace std;
 
+int CDBOp::InitDatabase() {
+	//构建数据库dbms__root 文件夹
+	CString folderPath = CString("./dbms_root");
+	bool crtFolder = CreateDirectory(folderPath, NULL);
+
+	return 0;
+}
 
 int CDBOp::CreateDatabase(CString& dbName) {
 	//创建数据库实体
 	CDBModel db(dbName);
 
 	//为该数据库创建文件夹
-	CString folderPath = CString("C:/Users/czh15/source/repos/myDBMS1/dbms_root/data") + CString("/") + dbName;
+	CString folderPath = CString("./dbms_root/") + CString("/") + dbName;
 	bool crtFolder = CreateDirectory(folderPath, NULL);
 
+
 	//在该文件夹下创建数据库描述文件： 数据库名.db文件
-	CString dbPath = CString("C:/Users/czh15/source/repos/myDBMS1/dbms_root") + CString("/") + dbName + CString(".db");
+	CString dbPath = CString("./dbms_root/") + CString("/") + dbName + CString(".db");
 	vector<CString> init;
 	init.push_back(CString("0#") + dbName);
 	bool crtDBFile = FileOp::WriteRecord(dbPath, init);
