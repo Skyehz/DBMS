@@ -40,26 +40,8 @@ public:
 	CString GetSelectedTBName();//得到当前被选择的表名
 	void DisplayDBList();		//显示数据库列表
 
-	void GetDBAndTableName(CString& dbName, CString& tbName);
-
-	afx_msg void OnNMRClick(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnCrtDB();
-	afx_msg void OnOpenDB();
-	afx_msg void OnDeleteDB();
-	afx_msg void OnCrtTable();
-	afx_msg void OnLookTable();
-	afx_msg void OnConditionQuery();
-	afx_msg void OnTvnSelchanged(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnDeleteTable();
-	afx_msg void OnDesignTable();
-	afx_msg void OnRenameDB();
-	afx_msg void OnTvnBeginlabeledit(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnTvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnAddTable();
-	afx_msg void OnBackupDB();
-	afx_msg void OnRecoveryDB();
-	afx_msg void OnClearTable();
-	afx_msg void OnLookLog();
+	
 
 };
 
