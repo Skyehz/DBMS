@@ -1,6 +1,37 @@
 #include "pch.h"
 #include "FileOp.h"
 
+//获取当前系统时间
+CString FileOp::GetCurrTime()
+{
+	SYSTEMTIME time;
+	::GetLocalTime(&time);
+	CTime t(time);
+	return t.Format("%Y-%m-%d %H:%M:%S");
+}
+
+//写日志文件
+bool FileOp::WriteLog(CString &info, CString &fileName)
+{
+	info += "\r\n";
+
+	/*CString in = CString("created successful");*/
+	CFile writefile;
+	bool openWrite = writefile.Open(fileName, CFile::modeCreate | CFile::modeWrite | CFile::modeNoTruncate);
+	if (openWrite) {
+		writefile.SeekToEnd();
+		int num = info.GetLength() *2;
+		writefile.Write(info, num);
+		writefile.Close();
+	}
+	else
+		return false;
+
+
+	return true;
+
+}
+
 vector<CString> FileOp::ReadAll(CString& fileName) {
 	vector<CString> content;
 	TCHAR con[256];
@@ -55,20 +86,24 @@ bool FileOp::WriteRecord(CString& fileName, vector<CString>& str) {
 }
 
 
+//在文件末尾加入一条记录
+bool FileOp::AddAnLine(CString& fileName, CString& str) {
+	CFile writefile;
+	bool openWrite = writefile.Open(fileName, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary | CFile::modeNoTruncate);
+	if (openWrite) {
+		writefile.SeekToEnd();
+		int num = str.GetLength() * 2;
+		char len[4];
+		ZeroMemory(len, sizeof(len));
+		sprintf_s(len, "%d", num);
+		writefile.Write(len, 4);
+		writefile.Write(str, num);
+		writefile.Close();
+	}
+	else
+	{
+		return false;
+	}
 
-bool FileOp::WriteLog(CString& oper)
-{
-	/*
-	CString info("");
-	CSystemDAO sysDao;
-	info += sysDao.GetCurrUserName(CString("log/u.temp"));
-	info += CString("  ") + oper;
-
-	SYSTEMTIME time;
-	::GetLocalTime(&time);
-	CTime t(time);
-	info += CString("  ") + t.Format("%Y-%m-%d %H:%M:%S");
-	return sysDao.WriteLog(info, CString("log/sys.log"));
-	*/
 	return true;
 }

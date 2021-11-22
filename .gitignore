@@ -5,3 +5,5 @@
 /.vs/myDBMS1/v16
 /dbms_root
 /Debug
+/.vs
+*.sln
