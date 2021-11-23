@@ -50,6 +50,7 @@ protected:
 	CSplitterWnd m_wndSplitter;
 public:
 	afx_msg void OnCrtDB();
+	afx_msg void OnDropDB();
 };
 
 

@@ -13,6 +13,7 @@ public:
 
 	int InitDatabase();//初始化数据库
 	int CreateDatabase(CString& dbName); //接受一个数据库名，创建数据库
+	int DropDatabase(CString& dbname); //删除指定数据库
 	vector<CDBModel> GetDatabaseList();//获取数据库列表
 };
 

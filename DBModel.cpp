@@ -13,12 +13,13 @@ CDBModel::CDBModel(int id, CString name , int type , CString filepath) :
 	crtime = FileOp::GetCurrTime();
 }
 
-CDBModel::CDBModel(CString& str) {
-	id = 0;
-	name = str;
-	type = 1;
-	filepath = CString("data/dbms.sys");
-	crtime = FileOp::GetCurrTime();
+CDBModel::CDBModel(CString& str) {	
+	vector<CString> strList = FileOp::StrSplit(str, L"#");
+	USES_CONVERSION;
+	id = atoi(T2A(strList[0]));		//CString -> char* -> int
+	name = strList[1];
+	type = atoi(T2A(strList[2]));
+	crtime = strList[3];
 }
 
 CDBModel::~CDBModel() {

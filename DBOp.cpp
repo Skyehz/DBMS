@@ -89,12 +89,25 @@ int CDBOp::CreateDatabase(CString& dbName) {
 	return 0;
 }
 
+//删除指定的数据库
+int CDBOp::DropDatabase(CString& dbname)
+{
+	/*if (!CDBDAO::DeleteDBRecord(this->sysPath, dbname) || !CDBDAO::DeleteDBFile(dbname))
+		return DELETE_ERROR;
+	else
+	{
+		CSystemLogic sysLogic;
+		sysLogic.WriteLog(CString("deleted database:") + dbname);
+		return YES;
+	}*/
+	return 0;
+}
 
 //获取当前数据库列表
 vector<CDBModel> CDBOp::GetDatabaseList()
 {
 	vector<CDBModel> res;
-	vector<CString> strList = FileOp::ReadAll(CString("./dbms_root/dbms.sys"));
+	vector<CString> strList = FileOp::ReadAll(CString("./dbms_root/data/dbms.sys"));
 	//MessageBox(NULL,CUtil::IntegerToString(strList.size()),L"",MB_OK);
 	if (!strList.empty())
 	{

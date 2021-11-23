@@ -48,6 +48,15 @@
     <ClInclude Include="FileOp.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CDBView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TableView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ParseSQL.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="myDBMS1.cpp">
@@ -72,6 +81,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="FileOp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CDBView.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TableView.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ParseSQL.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

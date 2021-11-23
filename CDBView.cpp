@@ -3,6 +3,7 @@
 #include "Resource.h"
 #include "MainFrm.h"
 #include "DBOp.h"
+#include "ParseSQL.h"
 
 // CDBView
 
@@ -20,6 +21,7 @@ CDBView::~CDBView()
 BEGIN_MESSAGE_MAP(CDBView, CTreeView)
 	//ON_NOTIFY_REFLECT(NM_RCLICK, &CDBView::OnNMRClick)
 	//ON_COMMAND(ID_32771, &CDBView::OnCrtDB)
+	ON_NOTIFY_REFLECT(TVN_ENDLABELEDIT, &CDBView::OnTvnEndlabeledit)
 	
 END_MESSAGE_MAP()
 
@@ -70,7 +72,7 @@ void CDBView::OnInitialUpdate()
 	m_hCurrTBItem = NULL;
 
 	//显示已有的数据库列表
-	//this->DisplayDBList();
+	this->DisplayDBList();
 
 	m_bAddDB = FALSE;
 	m_bAddTB = FALSE;
@@ -78,11 +80,16 @@ void CDBView::OnInitialUpdate()
 
 }
 
+CString CDBView::GetSelectedDBName() {
+	CString dbName;
+
+	return dbName;
+}
 
 void CDBView::DisplayDBList()
 {
-	CDBOp dbLogic;
-	vector<CDBModel> dbList = dbLogic.GetDatabaseList();
+	CDBOp dbOp;
+	vector<CDBModel> dbList = dbOp.GetDatabaseList();
 	//删除树状图中的数据库显示
 	HTREEITEM hNextItem;
 	HTREEITEM hPreItem = m_pTreeCtrl->GetRootItem();
@@ -96,32 +103,15 @@ void CDBView::DisplayDBList()
 	for (vector<CDBModel>::iterator ite = dbList.begin(); ite != dbList.end(); ++ite)
 	{
 		//MessageBox(CUtil::IntegerToString(ite->GetId()),L"",MB_OK);
-		//HTREEITEM hRoot = m_pTreeCtrl->InsertItem(ite->GetName(), 0, 0, TVI_ROOT, TVI_LAST);
-		//m_pTreeCtrl->SetItemData(hRoot, DBVIEW_DB_ITEM);
+		HTREEITEM hRoot = m_pTreeCtrl->InsertItem(ite->GetName(), 0, 0, TVI_ROOT, TVI_LAST);
+		m_pTreeCtrl->SetItemData(hRoot, DBVIEW_DB_ITEM);
 	}
 
 }
 
+//创建数据库
 void CDBView::OnCrtDB()
 {
-	// TODO: 在此添加命令处理程序代码
-	//CCrtDBDialog crt;
-	//if(crt.DoModal()==IDOK)
-	//{
-	//	//MessageBox(L"success to Get "+crt.m_eDBName,L"",MB_OK);
-	//	CDBLogic dbLogic;
-	//	int code = dbLogic.CreateDatabase(crt.m_eDBName);
-	//	if(code==YES)
-	//	{
-	//		//更新数据库列表
-	//		this->DisplayDBList();
-	//	}
-	//	else
-	//	{
-	//		MessageBox(CUtil::GetError(code),CString("错误"),MB_OK);
-	//	}
-	//};
-
 	HTREEITEM hItem;
 	hItem = m_pTreeCtrl->InsertItem(CString(""), 0, 1, TVI_ROOT, TVI_LAST);
 	if (hItem != NULL)
@@ -130,5 +120,56 @@ void CDBView::OnCrtDB()
 		m_pTreeCtrl->SetItemData(hItem, DBVIEW_DB_ITEM);
 		m_pTreeCtrl->EditLabel(hItem);
 	}
+}
 
+//删除数据库
+void CDBView::OnDropDB() {
+	CString dbName = this->GetSelectedDBName();
+	if (MessageBox(CString("操作会删除关于该数据库所有数据，确定删除") + dbName + CString("？"), CString("删除数据库"), MB_OKCANCEL) == IDOK)
+	{
+		//执行删除操作
+		CDBOp dbOp;
+		int code = dbOp.DropDatabase(dbName);
+		//树形结构更新
+		this->DisplayDBList();
+		
+	}
+}
+
+
+
+//树形结构中当对节点编辑结束时执行该函数
+void CDBView::OnTvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMTVDISPINFO pTVDispInfo = reinterpret_cast<LPNMTVDISPINFO>(pNMHDR);
+
+	// TODO: 在此添加控件通知处理程序代码
+
+	HTREEITEM hItem = m_pTreeCtrl->GetSelectedItem();
+	CString name = pTVDispInfo->item.pszText;
+	if (m_bAddDB)//状态为增加数据库
+	{
+		if (name != "")
+		{
+			//生成create语句，解析sql语句，创建数据库
+			CString crtSql = CString("create database ") + name;
+			ParseSQL::getSql(crtSql);
+			/*CDBOp dbOp;
+			int code = dbOp.CreateDatabase(name);*/
+		}
+		//更新数据库列表
+		this->DisplayDBList();
+
+		m_bAddDB = FALSE;
+	}
+	if (m_bAddTB)//状态为增加表
+	{
+		//生成语句，增加表操作
+
+		m_bAddTB = FALSE;
+	}
+
+
+
+	*pResult = 0;
 }

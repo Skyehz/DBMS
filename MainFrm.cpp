@@ -6,7 +6,7 @@
 #include "framework.h"
 #include "myDBMS1.h"
 //#include "stdafx.h"
-
+#include "resource.h"
 
 #include "MainFrm.h"
 #include "DBOp.h"
@@ -23,6 +23,7 @@ IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_CREATE()
 	ON_COMMAND(ID_32771, &CMainFrame::OnCrtDB)
+	ON_COMMAND(ID_32774, &CMainFrame::OnDropDB)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -113,17 +114,25 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
 	m_pTableView = (CTableView*)m_wndSplitter.GetPane(0, 1);
 	m_pDBView = (CDBView*)m_wndSplitter.GetPane(0, 0);
 
-
-
 	return TRUE;
 }
 
 void CMainFrame::OnCrtDB()
 {
 	// TODO: 在此添加命令处理程序代码
-	CDBOp* dbop = new CDBOp();
-	string str = "db1";		//创建数据库db1
-	CString cstr;
-	cstr = str.c_str();
-	dbop->CreateDatabase(cstr);
+	m_pDBView->OnCrtDB();
+	
+	
+	//CDBOp* dbop = new CDBOp();
+	//string str = "db1";		//创建数据库db1
+	//CString cstr;
+	//cstr = str.c_str();
+	//dbop->CreateDatabase(cstr);
+}
+
+
+void CMainFrame::OnDropDB()
+{
+	// TODO: 在此添加命令处理程序代码
+
 }

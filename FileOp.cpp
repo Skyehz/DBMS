@@ -10,6 +10,22 @@ CString FileOp::GetCurrTime()
 	return t.Format("%Y-%m-%d %H:%M:%S");
 }
 
+//分割字符串
+vector<CString> FileOp::StrSplit(CString str, CString split)
+{
+	vector<CString> res;
+	string::size_type index = 0;
+	str += split;
+	while (str.GetLength() != 0)
+	{
+		index = str.Find(split);
+		res.push_back(str.Left(index));
+		str.Delete(0, index + 1);
+	}
+	return res;
+}
+
+
 //写日志文件
 bool FileOp::WriteLog(CString &info, CString &fileName)
 {
@@ -32,6 +48,7 @@ bool FileOp::WriteLog(CString &info, CString &fileName)
 
 }
 
+//读取文件中的全部内容
 vector<CString> FileOp::ReadAll(CString& fileName) {
 	vector<CString> content;
 	TCHAR con[256];

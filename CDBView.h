@@ -39,9 +39,10 @@ public:
 	CString GetSelectedDBName();//得到当前被选择的数据库名
 	CString GetSelectedTBName();//得到当前被选择的表名
 	void DisplayDBList();		//显示数据库列表
-
-	afx_msg void OnCrtDB();
 	
+	afx_msg void OnCrtDB();
+	afx_msg void OnDropDB();
+	afx_msg void OnTvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult);
 
 };
 
