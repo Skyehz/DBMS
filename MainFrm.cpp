@@ -5,6 +5,8 @@
 #include "pch.h"
 #include "framework.h"
 #include "myDBMS1.h"
+//#include "stdafx.h"
+#include "resource.h"
 
 #include "MainFrm.h"
 #include "DBOp.h"
@@ -21,6 +23,7 @@ IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_CREATE()
 	ON_COMMAND(ID_32771, &CMainFrame::OnCrtDB)
+	ON_COMMAND(ID_32774, &CMainFrame::OnDropDB)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -46,14 +49,14 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
-
+/*
 	if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
 		!m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
 	{
 		TRACE0("未能创建工具栏\n");
 		return -1;      // 未能创建
 	}
-
+	*/
 	if (!m_wndStatusBar.Create(this))
 	{
 		TRACE0("未能创建状态栏\n");
@@ -61,10 +64,10 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 	m_wndStatusBar.SetIndicators(indicators, sizeof(indicators)/sizeof(UINT));
 
-	// TODO: 如果不需要可停靠工具栏，则删除这三行
-	m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
-	EnableDocking(CBRS_ALIGN_ANY);
-	DockControlBar(&m_wndToolBar);
+	//// TODO: 如果不需要可停靠工具栏，则删除这三行
+	//m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
+	//EnableDocking(CBRS_ALIGN_ANY);
+	//DockControlBar(&m_wndToolBar);
 
 
 	return 0;
@@ -97,14 +100,39 @@ void CMainFrame::Dump(CDumpContext& dc) const
 
 // CMainFrame 消息处理程序
 
+//创建窗口（左右）
+BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
+{
+	// TODO: 在此添加专用代码和/或调用基类
+	if (!m_wndSplitter.CreateStatic(this, 1, 2))
+		return FALSE;
+	if (!m_wndSplitter.CreateView(0, 0, RUNTIME_CLASS(CDBView), CSize(160, 200), pContext))
+		return FALSE;
+	if (!m_wndSplitter.CreateView(0, 1, RUNTIME_CLASS(CTableView), CSize(160, 200), pContext))
+		return FALSE;
 
+	m_pTableView = (CTableView*)m_wndSplitter.GetPane(0, 1);
+	m_pDBView = (CDBView*)m_wndSplitter.GetPane(0, 0);
+
+	return TRUE;
+}
 
 void CMainFrame::OnCrtDB()
 {
 	// TODO: 在此添加命令处理程序代码
-	CDBOp* dbop = new CDBOp();
-	string str = "db1";		//创建数据库db1
-	CString cstr;
-	cstr = str.c_str();
-	dbop->CreateDatabase(cstr);
+	m_pDBView->OnCrtDB();
+	
+	
+	//CDBOp* dbop = new CDBOp();
+	//string str = "db1";		//创建数据库db1
+	//CString cstr;
+	//cstr = str.c_str();
+	//dbop->CreateDatabase(cstr);
+}
+
+
+void CMainFrame::OnDropDB()
+{
+	// TODO: 在此添加命令处理程序代码
+
 }

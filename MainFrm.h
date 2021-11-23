@@ -3,7 +3,9 @@
 //
 
 #pragma once
-
+#include "afxext.h"
+#include "TableView.h"
+#include "CDBView.h"
 class CMainFrame : public CFrameWnd
 {
 	
@@ -39,7 +41,16 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
+	CDBView* m_pDBView;			//左边树状图窗口指针
+	CTableView* m_pTableView;	//右边表窗口指针
+
+	virtual BOOL OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext);
+
+protected:
+	CSplitterWnd m_wndSplitter;
+public:
 	afx_msg void OnCrtDB();
+	afx_msg void OnDropDB();
 };
 
 
