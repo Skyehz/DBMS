@@ -20,8 +20,10 @@ void ParseSQL::getSql(CString& statement) {
 
 		}
 		else
+		{
+			MessageBox(NULL, CString("创建失败"), CString("提示"), MB_OK);
 			return;
-			//MessageBox(CString("create wrong!"), CString("删除数据库"), MB_OKCANCEL) == IDOK)
+		}
 	}
 	//删除库或表
 	else if (init[0] == CString("drop")) {
@@ -46,4 +48,5 @@ void ParseSQL::getSql(CString& statement) {
 		CString name = init[1];
 
 	}
+
 }

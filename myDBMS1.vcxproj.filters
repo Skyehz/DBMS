@@ -57,6 +57,9 @@
     <ClInclude Include="ParseSQL.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="SqlDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="myDBMS1.cpp">
@@ -90,6 +93,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ParseSQL.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SqlDialog.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

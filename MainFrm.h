@@ -51,6 +51,7 @@ protected:
 public:
 	afx_msg void OnCrtDB();
 	afx_msg void OnDropDB();
+	afx_msg void OnInputSql();
 };
 
 

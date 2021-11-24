@@ -22,7 +22,7 @@ BEGIN_MESSAGE_MAP(CDBView, CTreeView)
 	//ON_NOTIFY_REFLECT(NM_RCLICK, &CDBView::OnNMRClick)
 	//ON_COMMAND(ID_32771, &CDBView::OnCrtDB)
 	ON_NOTIFY_REFLECT(TVN_ENDLABELEDIT, &CDBView::OnTvnEndlabeledit)
-	
+	ON_COMMAND(ID_32776, &CDBView::OnRefresh)
 END_MESSAGE_MAP()
 
 
@@ -81,9 +81,17 @@ void CDBView::OnInitialUpdate()
 }
 
 CString CDBView::GetSelectedDBName() {
-	CString dbName;
+	m_hCurrDBItem= GetTreeCtrl().GetSelectedItem();
+	if (m_hCurrDBItem)
+	{
+		return GetTreeCtrl().GetItemText(m_hCurrDBItem);
+	}
+	else
+	{
+		//如果当前没有选择database，则返回第一个数据库名
+		return GetTreeCtrl().GetItemText(m_pTreeCtrl->GetRootItem());;
 
-	return dbName;
+	}
 }
 
 void CDBView::DisplayDBList()
@@ -128,8 +136,10 @@ void CDBView::OnDropDB() {
 	if (MessageBox(CString("操作会删除关于该数据库所有数据，确定删除") + dbName + CString("？"), CString("删除数据库"), MB_OKCANCEL) == IDOK)
 	{
 		//执行删除操作
-		CDBOp dbOp;
-		int code = dbOp.DropDatabase(dbName);
+		/*CDBOp dbOp;
+		int code = dbOp.DropDatabase(dbName);*/
+		CString crtSql = CString("drop database ") + dbName;
+		ParseSQL::getSql(crtSql);
 		//树形结构更新
 		this->DisplayDBList();
 		
@@ -165,11 +175,39 @@ void CDBView::OnTvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
 	if (m_bAddTB)//状态为增加表
 	{
 		//生成语句，增加表操作
-
 		m_bAddTB = FALSE;
 	}
-
-
-
 	*pResult = 0;
+}
+
+
+void CDBView::OnTvnSelchanged(NMHDR* pNMHDR, LRESULT* pResult) {
+	LPNMTREEVIEW pNMTreeView = reinterpret_cast<LPNMTREEVIEW>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
+	HTREEITEM hItem = m_pTreeCtrl->GetSelectedItem();
+	//MessageBox(CUtil::IntegerToString(m_pTreeCtrl->GetItemData(hItem)),L"",MB_OK);
+	if (m_pTreeCtrl->GetItemData(hItem) == DBVIEW_DB_ITEM)          // 数据库节点
+	{
+		m_hCurrDBItem = hItem;
+
+
+		//// 禁用字段和记录菜单并刷新菜单栏
+		//GetParentFrame()->GetMenu()->GetSubMenu(2)->EnableMenuItem(1, MF_BYPOSITION | MF_DISABLED);
+		//GetParentFrame()->GetMenu()->GetSubMenu(2)->EnableMenuItem(3, MF_BYPOSITION | MF_DISABLED);
+		//GetParentFrame()->GetMenu()->GetSubMenu(2)->EnableMenuItem(4, MF_BYPOSITION | MF_DISABLED);
+		//GetParentFrame()->GetMenu()->GetSubMenu(2)->EnableMenuItem(5, MF_BYPOSITION | MF_DISABLED);
+		//GetParentFrame()->GetMenu()->EnableMenuItem(3, MF_BYPOSITION | MF_DISABLED);
+		//GetParentFrame()->GetMenu()->EnableMenuItem(4, MF_BYPOSITION | MF_DISABLED);
+		//GetParentFrame()->DrawMenuBar();
+
+		//((CMainFrame*)GetParentFrame())->m_pTableView->ClearTable();
+	}
+
+	*pResult = 1;
+}
+
+void CDBView::OnRefresh()
+{
+	// TODO: 在此添加命令处理程序代码
+	this->DisplayDBList();
 }

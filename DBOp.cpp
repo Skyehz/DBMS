@@ -89,17 +89,48 @@ int CDBOp::CreateDatabase(CString& dbName) {
 	return 0;
 }
 
+int DeleteDBRecord(CString& sysFileName, CString& dbname)
+{
+	vector<CString> list = FileOp::ReadAll(sysFileName);
+	if (list.empty())
+		return false;
+	else
+	{
+		vector<CString>::iterator ite = list.begin();
+		++ite;
+		for (; ite != list.end(); ++ite)
+		{
+			vector<CString> temp = FileOp::StrSplit(*ite, CString("#"));
+			//如果找到指定的记录
+			if (temp[1] == dbname)
+			{
+				list.erase(ite);
+				break;
+			}
+		}
+		if (FileOp::WriteRecord(sysFileName, list))
+			return true;
+		else
+			return false;
+	}
+
+}
+
+
+
 //删除指定的数据库
 int CDBOp::DropDatabase(CString& dbname)
 {
-	/*if (!CDBDAO::DeleteDBRecord(this->sysPath, dbname) || !CDBDAO::DeleteDBFile(dbname))
-		return DELETE_ERROR;
+	if (!DeleteDBRecord(this->sysPath, dbname) || !DeleteFile(CString("./dbms_root/") + dbname + CString(".db")) || !FileOp::DeleteFolder(CString("./dbms_root/data/") + dbname))
+	{
+		return false;
+	}
 	else
 	{
-		CSystemLogic sysLogic;
-		sysLogic.WriteLog(CString("deleted database:") + dbname);
-		return YES;
-	}*/
+		/*CSystemLogic sysLogic;
+		sysLogic.WriteLog(CString("deleted database:") + dbname);*/
+		return true;
+	}
 	return 0;
 }
 

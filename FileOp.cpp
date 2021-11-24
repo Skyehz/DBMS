@@ -98,7 +98,6 @@ bool FileOp::WriteRecord(CString& fileName, vector<CString>& str) {
 	{
 		res = false;
 	}
-
 	return res;
 }
 
@@ -121,6 +120,32 @@ bool FileOp::AddAnLine(CString& fileName, CString& str) {
 	{
 		return false;
 	}
+
+	return true;
+}
+
+//删除文件夹和.db文件
+bool FileOp::DeleteFolder(CString& folderName)
+{
+	CFileFind finder;
+	CString path;
+	path.Format(CString("%s/*.*"), folderName);
+	BOOL bWorking = finder.FindFile(path);
+	while (bWorking)
+	{
+		bWorking = finder.FindNextFile();
+		if (finder.IsDirectory() && !finder.IsDots())
+		{//处理文件夹
+			DeleteFolder(finder.GetFilePath()); //递归删除文件夹
+			RemoveDirectory(finder.GetFilePath());
+		}
+		else
+		{//处理文件
+			DeleteFile(finder.GetFilePath());
+		}
+	}
+	if (!RemoveDirectory(folderName))
+		return false;
 
 	return true;
 }

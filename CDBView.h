@@ -28,8 +28,8 @@ private:
 	CImageList m_treeImageList;
 public:
 
-	HTREEITEM m_hCurrDBItem;
-	HTREEITEM m_hCurrTBItem;
+	HTREEITEM m_hCurrDBItem;	//当前选中的数据库名称
+	HTREEITEM m_hCurrTBItem;	//当前表的数据库名称
 
 	CTreeCtrl* m_pTreeCtrl;
 
@@ -43,6 +43,8 @@ public:
 	afx_msg void OnCrtDB();
 	afx_msg void OnDropDB();
 	afx_msg void OnTvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnTvnSelchanged(NMHDR* pNMHDR, LRESULT* pResult);
 
+	afx_msg void OnRefresh();
 };
 

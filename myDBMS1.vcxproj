@@ -195,6 +195,7 @@
     <ClInclude Include="ParseSQL.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SqlDialog.h" />
     <ClInclude Include="TableView.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -214,6 +215,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SqlDialog.cpp" />
     <ClCompile Include="TableView.cpp" />
   </ItemGroup>
   <ItemGroup>

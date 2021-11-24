@@ -6,8 +6,8 @@
 #include "framework.h"
 #include "myDBMS1.h"
 //#include "stdafx.h"
-#include "resource.h"
-
+#include "Resource.h"
+#include "SqlDialog.h"
 #include "MainFrm.h"
 #include "DBOp.h"
 
@@ -24,6 +24,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_CREATE()
 	ON_COMMAND(ID_32771, &CMainFrame::OnCrtDB)
 	ON_COMMAND(ID_32774, &CMainFrame::OnDropDB)
+	ON_COMMAND(ID_32775, &CMainFrame::OnInputSql)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -134,5 +135,13 @@ void CMainFrame::OnCrtDB()
 void CMainFrame::OnDropDB()
 {
 	// TODO: 在此添加命令处理程序代码
+	m_pDBView->OnDropDB();
+}
 
+
+void CMainFrame::OnInputSql()
+{
+	// TODO: 在此添加命令处理程序代码
+	SqlDialog sqlDialog;
+	sqlDialog.DoModal();
 }
