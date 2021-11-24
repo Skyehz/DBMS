@@ -9,7 +9,7 @@ FieldModel::FieldModel(int order, CString name, int type, int param, int integri
 
 FieldModel::FieldModel(CString& str)
 {
-	
+	//处理这些字符串
 }
 
 FieldModel::~FieldModel(void)
