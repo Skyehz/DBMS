@@ -40,6 +40,9 @@ protected:
 
 public:
 	afx_msg void OnCrtDB();
+	afx_msg void OnCreateTable();
+	afx_msg void DelTable();
+	afx_msg void Altertable();
 };
 
 

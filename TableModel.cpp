@@ -14,22 +14,19 @@ using namespace std;
 //	auto t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 //}
 
-TableModel::TableModel(CString& str, CString& dbmName) {
+TableModel::TableModel() {
 	id = 0;
-	name = str;
 	dbmspath = "dbms_root/data/db1";
 	col_num = 0;
 	record_num = 0;
-	dbmName = dbmName;
-	/*	auto t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-		//תΪstring->CString
-		std::stringstream ss;
-		ss << std::put_time(std::localtime(&t), "%Y/%m%/d %H:%M:%S");
-		std::string str_time = ss.str();*/
-	string str_time = "2021/11/15 22:46";
-	CreateTime = str_time.c_str();
-	string edit_time = "2021/11/15 23:50";
-	EditTime = edit_time.c_str();
+	name = "t1";
+	CString str_time;
+	CTime tm; tm = CTime::GetCurrentTime();
+	str_time = tm.Format("%Y/%m/%d %X");
+	dbmName = "db1";
+
+	CreateTime = str_time;
+	EditTime = str_time;
 
 }
 

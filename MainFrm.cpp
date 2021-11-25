@@ -8,6 +8,7 @@
 
 #include "MainFrm.h"
 #include "DBOp.h"
+#include "TableOp.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -21,6 +22,9 @@ IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_CREATE()
 	ON_COMMAND(ID_32771, &CMainFrame::OnCrtDB)
+	ON_COMMAND(ID_APP_ABOUT, &CMainFrame::OnCreateTable)
+	ON_COMMAND(ID_32774, &CMainFrame::DelTable)
+	ON_COMMAND(ID_32773, &CMainFrame::Altertable)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -107,4 +111,43 @@ void CMainFrame::OnCrtDB()
 	CString cstr;
 	cstr = str.c_str();
 	dbop->CreateDatabase(cstr);
+}
+
+
+void CMainFrame::OnCreateTable()
+{
+	// TODO: 在此添加命令处理程序代码
+	TableOp* tableop = new TableOp();
+	string str = "db1";
+	string str2 = "t1";
+	CString dbname, tablename;
+	dbname = str.c_str();
+	tablename = str2.c_str();
+	tableop->CreateTable(tablename, dbname);
+}
+
+
+void CMainFrame::DelTable()
+{
+	// TODO: 在此添加命令处理程序代码
+	TableOp* tableop = new TableOp();
+	string str = "db1";
+	string str2 = "t1";
+	CString dbname, tablename;
+	dbname = str.c_str();
+	tablename = str2.c_str();
+	tableop->DropTable(tablename, dbname);
+}
+
+
+void CMainFrame::Altertable()
+{
+	// TODO: 在此添加命令处理程序代码
+	TableOp* tableop = new TableOp();
+	string str = "db1";
+	string str2 = "t2";
+	CString dbname, tablename;
+	dbname = str.c_str();
+	tablename = str2.c_str();
+	tableop->AlterTable(tablename, dbname, 2, 3);
 }

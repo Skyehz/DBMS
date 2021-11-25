@@ -15,8 +15,7 @@ public:
 	int record_num;    //记录数
 	CString dbmName;        //所在库名字
 
-	//TableModel();
-	TableModel(CString& str, CString& dbmName);
+	TableModel();
 	~TableModel(void);
 };
 
