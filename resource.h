@@ -23,6 +23,8 @@
 #define ID_32782                        32782
 #define ID_32783                        32783
 #define ID_32784                        32784
+#define ID_32880                        32880
+#define ID_32881                        32881
 
 // Next default values for new objects
 // 
