@@ -17,11 +17,11 @@ public:
 	
 	bool dropFiled(CString& dbName, CString& tableName,CString& fieldName);
 
+	CString queryFiled(CString& dbName, CString& tableName, CString& fieldName);//查询表内字段信息，返回字符串
+	vector<CString> queryFields(CString& dbName, CString& tableName);// 查询表内所有字段名
 
 
 	bool IsTableExist(CString& dbName, CString& tableName);//判断表定义文件是否存在
-	bool IsFiledExist(CString& dbName, CString& tableName, CString& fieldName);//查看表内tdf字段是否存在
-	CString queryFiled(CString& dbName, CString& tableName, CString& fieldName);//查询表内字段信息，返回字符串
-	
+	int  IsFiledExist(CString& dbName, CString& tableName, CString& fieldName);//查看表内tdf字段是否存在
 };
 

@@ -31,5 +31,6 @@ public:
 	void SetParam(int m_param) { param = m_param; };
 	void GetMtime(CString m_mtime) {  mtime=m_mtime; };
 	void SetIntegrities(int m_integrities) {integrities=m_integrities; };
+
 };
 
