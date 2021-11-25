@@ -10,7 +10,7 @@
 
 #include "MainFrm.h"
 #include "DBOp.h"
-
+#include "TableOp.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -24,6 +24,10 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_CREATE()
 	ON_COMMAND(ID_32771, &CMainFrame::OnCrtDB)
 	ON_COMMAND(ID_32774, &CMainFrame::OnDropDB)
+	ON_COMMAND(ID_32775, &CMainFrame::OnBtnCTable)
+	ON_COMMAND(ID_32776, &CMainFrame::OnbtnATable)
+	ON_COMMAND(ID_32777, &CMainFrame::OnbtnDTable)
+	ON_COMMAND(ID_32772, &CMainFrame::OnOpenDB)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -135,4 +139,37 @@ void CMainFrame::OnDropDB()
 {
 	// TODO: 在此添加命令处理程序代码
 
+}
+
+
+
+
+void CMainFrame::OnBtnCTable()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_pDBView->OnbtnCTable();
+
+}
+
+
+void CMainFrame::OnbtnATable()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_pDBView->OnbtnATable();
+
+}
+
+
+void CMainFrame::OnbtnDTable()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_pDBView->OnbtnDTable();
+
+}
+
+
+void CMainFrame::OnOpenDB()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_pDBView->OnOpenDB();
 }

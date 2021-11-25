@@ -5,3 +5,6 @@
 /.vs/myDBMS1/v16
 /x64/Debug/myDBMS1.tlog
 /x64/Debug
+/dbms_root/data
+/dbms_root/db1.db
+/db1

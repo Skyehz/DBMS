@@ -3,7 +3,9 @@
 #include "Resource.h"
 #include "MainFrm.h"
 #include "DBOp.h"
+#include "TableOp.h"
 #include "ParseSQL.h"
+#include "TableOp.h"
 
 // CDBView
 
@@ -22,6 +24,7 @@ BEGIN_MESSAGE_MAP(CDBView, CTreeView)
 	//ON_NOTIFY_REFLECT(NM_RCLICK, &CDBView::OnNMRClick)
 	//ON_COMMAND(ID_32771, &CDBView::OnCrtDB)
 	ON_NOTIFY_REFLECT(TVN_ENDLABELEDIT, &CDBView::OnTvnEndlabeledit)
+	ON_NOTIFY_REFLECT(TVN_SELCHANGED, &CDBView::OnTvnSelchanged)
 	
 END_MESSAGE_MAP()
 
@@ -80,15 +83,49 @@ void CDBView::OnInitialUpdate()
 
 }
 
-CString CDBView::GetSelectedDBName() {
-	CString dbName;
+void CDBView::OnTvnSelchanged(NMHDR* pNMHDR, LRESULT* pResult) {
+	LPNMTREEVIEW pNMTreeView = reinterpret_cast<LPNMTREEVIEW>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
+	HTREEITEM hItem = m_pTreeCtrl->GetSelectedItem();
+	//MessageBox(CUtil::IntegerToString(m_pTreeCtrl->GetItemData(hItem)),L"",MB_OK);
+	if (m_pTreeCtrl->GetItemData(hItem) == DBVIEW_DB_ITEM)
+	{
+		m_hCurrDBItem = hItem;
 
-	return dbName;
+	}
+
+	*pResult = 1;
+}
+CString CDBView::GetSelectedDBName() {
+	m_hCurrDBItem = GetTreeCtrl().GetSelectedItem();
+	if (m_hCurrDBItem)
+	{
+		return GetTreeCtrl().GetItemText(m_hCurrDBItem);
+	}
+	else
+	{
+		//如果当前没有选择database，则返回第一个数据库名
+		return GetTreeCtrl().GetItemText(m_pTreeCtrl->GetRootItem());;
+
+	}
 }
 
+CString CDBView::GetSelectedTBName() {
+	m_hCurrTBItem = GetTreeCtrl().GetSelectedItem();
+	if (m_hCurrTBItem)
+	{
+		return GetTreeCtrl().GetItemText(m_hCurrTBItem);
+	}
+	else
+	{
+		return NULL;
+
+	}
+}
 void CDBView::DisplayDBList()
 {
 	CDBOp dbOp;
+
 	vector<CDBModel> dbList = dbOp.GetDatabaseList();
 	//删除树状图中的数据库显示
 	HTREEITEM hNextItem;
@@ -165,11 +202,76 @@ void CDBView::OnTvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
 	if (m_bAddTB)//状态为增加表
 	{
 		//生成语句，增加表操作
-
+		TableOp tbop;
+		tbop.CreateTable(name, this->GetSelectedDBName());
 		m_bAddTB = FALSE;
 	}
 
 
 
 	*pResult = 0;
+
+}
+
+//打开数据库
+void CDBView::OnOpenDB() {
+
+	//删除表List
+	HTREEITEM hNextItem;
+	HTREEITEM hChildItem = m_pTreeCtrl->GetChildItem(m_hCurrDBItem);
+	while (hChildItem != NULL)
+	{
+		hNextItem = m_pTreeCtrl->GetNextItem(hChildItem, TVGN_NEXT);
+		m_pTreeCtrl->DeleteItem(hChildItem);
+		hChildItem = hNextItem;
+	}
+
+	//获得当前数据库名和该数据库下所有表的list
+	CString currentDB = this->GetSelectedDBName();
+	TableOp tbOp;
+	vector<TableModel> tbList = tbOp.GetTableMess(currentDB);
+	for (int i = 0; i < tbList.size(); i++)
+	{
+	 m_pTreeCtrl->SetItemData(m_pTreeCtrl->InsertItem(
+	  //表名
+	  tbList[i].name, 1, 1, m_hCurrDBItem), DBVIEW_TABLE_ITEM);
+	}
+	m_pTreeCtrl->Expand(m_hCurrDBItem, TVE_EXPAND);
+}
+
+void CDBView::OnbtnCTable() {
+	this->OnOpenDB();
+	HTREEITEM hItem;
+	hItem = m_pTreeCtrl->InsertItem(CString(""), GetTreeCtrl().GetSelectedItem());
+	if (hItem != NULL)
+	{
+		m_bAddTB = TRUE;
+		m_pTreeCtrl->SetItemData(hItem, DBVIEW_DB_ITEM);
+		m_pTreeCtrl->EditLabel(hItem);
+	}
+
+}
+
+void CDBView::OnbtnATable()
+{
+	// TODO: 在此添加命令处理程序代码
+
+
+}
+
+
+void CDBView::OnbtnDTable()
+{
+	CString dbName = this->GetSelectedDBName();
+	CString tbName = this->GetSelectedTBName();
+	if (MessageBox(CString("操作会删除关于该表及表中所有数据，确定删除") + tbName + CString("？"), CString("删除表"), MB_OKCANCEL) == IDOK)
+	{
+		//执行删除操作
+		TableOp tbOp;
+		tbOp.DropTable(tbName,dbName);
+		//树形结构更新
+		this->DisplayDBList();
+
+	}
+
 }

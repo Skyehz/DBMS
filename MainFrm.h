@@ -51,6 +51,10 @@ protected:
 public:
 	afx_msg void OnCrtDB();
 	afx_msg void OnDropDB();
+	afx_msg void OnBtnCTable();
+	afx_msg void OnbtnATable();
+	afx_msg void OnbtnDTable();
+	afx_msg void OnOpenDB();
 };
 
 

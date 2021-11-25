@@ -35,14 +35,19 @@ public:
 
 	bool m_bAddDB;  //状态是否为添加数据库
 	bool m_bAddTB;  //状态是否为添加表
-
+	
 	CString GetSelectedDBName();//得到当前被选择的数据库名
 	CString GetSelectedTBName();//得到当前被选择的表名
 	void DisplayDBList();		//显示数据库列表
+	void OnOpenDB();
+	void OnbtnCTable();
+	void OnbtnDTable();
+	void OnbtnATable();
 	
 	afx_msg void OnCrtDB();
 	afx_msg void OnDropDB();
 	afx_msg void OnTvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnTvnSelchanged(NMHDR* pNMHDR, LRESULT* pResult);
 
 };
 
