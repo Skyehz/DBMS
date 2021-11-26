@@ -5,7 +5,7 @@
 #include "myDBMS1.h"
 #include "SqlDialog.h"
 #include "afxdialogex.h"
-#include "Resource.h"
+#include "resource.h"
 #include "ParseSQL.h"
 
 // SqlDialog 对话框
@@ -30,12 +30,12 @@ void SqlDialog::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(SqlDialog, CDialogEx)
+
 	ON_BN_CLICKED(IDOK, &SqlDialog::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 
 // SqlDialog 消息处理程序
-
 
 void SqlDialog::OnBnClickedOk()
 {
@@ -44,6 +44,4 @@ void SqlDialog::OnBnClickedOk()
 	CString cstr;
 	GetDlgItem(IDC_EDIT1)->GetWindowText(cstr);
 	ParseSQL::getSql(cstr);
-	/*this->DoModal();
-	GetDlgItem(IDC_EDIT1)->SetWindowText(cstr+CString("FOO"));*/
 }

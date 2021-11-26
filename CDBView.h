@@ -39,12 +39,20 @@ public:
 	CString GetSelectedDBName();//得到当前被选择的数据库名
 	CString GetSelectedTBName();//得到当前被选择的表名
 	void DisplayDBList();		//显示数据库列表
+
 	
 	afx_msg void OnCrtDB();
 	afx_msg void OnDropDB();
+	afx_msg void OnOpenDB();
+	afx_msg void OnRenameDB();
 	afx_msg void OnTvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnTvnSelchanged(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnNMRClick(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnTvnBeginlabeledit(NMHDR* pNMHDR, LRESULT* pResult);
 
 	afx_msg void OnRefresh();
+	afx_msg void OnCrtTable();
+	afx_msg void OnbtnATable();
+	afx_msg void OnbtnDTable();
 };
 

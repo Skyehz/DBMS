@@ -149,3 +149,19 @@ bool FileOp::DeleteFolder(CString& folderName)
 
 	return true;
 }
+
+//修改文件名
+bool FileOp::ModifyFileName(CString& oldname, CString& newname)
+{
+	try
+	{
+		CFile::Rename(oldname, newname);
+	}
+	catch (CFileException* pEx)
+	{
+		MessageBox(NULL, CString("修改失败：") + pEx->m_strFileName, CString("修改文件名称"), MB_OK);
+		return false;
+	}
+
+	return true;
+}

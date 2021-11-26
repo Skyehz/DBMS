@@ -1,7 +1,8 @@
 #include "pch.h"
 #include "TableView.h"
+#include "vector"
 
-
+using namespace std;
 // CTableView
 
 IMPLEMENT_DYNCREATE(CTableView, CListView)
@@ -68,4 +69,32 @@ void CTableView::OnInitialUpdate()
 	m_curView = TABLEVIEW_VALID;
 
 }
+/*
+void CTableView::DisplayRecords(vector<RecordModel>& rcdlist, vector<FieldModel>& fieldList)
+{
+	m_curView = TABLEVIEW_RECORD;	//视图类型设置为记录视图
 
+	//清除表
+	this->ClearTable();
+
+	int columnNum = fieldList.size() + 1;
+	//显示字段
+	m_ListCtrl->InsertColumn(0, CString("#"), LVCFMT_LEFT, 0);
+	for (int i = 1; i < columnNum; i++)
+	{
+		m_ListCtrl->InsertColumn(i, fieldList[i - 1].GetName(), LVCFMT_LEFT, 150);
+	}
+	//显示记录
+	int rcdNum = rcdlist.size();
+	for (int i = 0; i < rcdNum; i++)
+	{
+		CString cstr;
+		cstr.Format(_T("%d"), rcdlist[i].GetId());
+		m_ListCtrl->InsertItem(i, cstr);
+		for (int j = 1; j < columnNum; j++)
+		{
+			m_ListCtrl->SetItemText(i, j, rcdlist[i].GetValue(fieldList[j - 1].GetName()));
+		}
+	}
+}
+*/

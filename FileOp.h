@@ -12,5 +12,6 @@ public:
 	static bool WriteLog(CString &info, CString &fileName);		//写日志文件
 	static bool AddAnLine(CString& fileName, CString& str);	//在文件末尾加入一条记录
 	static bool DeleteFolder(CString& folderName);	//删除文件夹
+	static bool ModifyFileName(CString& oldname, CString& newname);
 };
 

@@ -32,7 +32,8 @@ public:
 	int m_iColumn;
 	int m_iCount;
 
-	/*void DisplayRecords(vector<CRecordEntity>& rcdlist, vector<CFieldEntity>& fieldList);
+	//void DisplayRecords(vector<CString>& rcdlist, vector<FieldModel>& fieldList);
+	/*
 	void DisplayFields(vector<CFieldEntity>& fieldList);*/
 	void ClearTable();
 	afx_msg void OnAddField();
