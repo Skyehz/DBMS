@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "FileOp.h"
+//#include<string>
+#include <stack>
 
 //获取当前系统时间
 CString FileOp::GetCurrTime()
@@ -24,6 +26,111 @@ vector<CString> FileOp::StrSplit(CString str, CString split)
 	}
 	return res;
 }
+
+//int -> cstring
+CString FileOp::IntegerToString(int number)
+{
+	if (number == NULL)
+		return CString("0");
+	else
+	{
+		char buff[1024];
+		sprintf_s(buff, "%d", number);
+		return CString(buff);
+	}
+}
+
+int FileOp::StringToInteger(CString cstring)
+{
+	if (!cstring)
+		return NULL;
+	//针对Unicode编码的转化方案
+	USES_CONVERSION;
+	return atoi(T2A(cstring));
+}
+
+CString FileOp::GetTypeCString(int type) {
+	switch (type)
+	{
+	case 1:
+		return CString("Integer");
+	case 2:
+		return CString("Bool");
+	case 3:
+		return CString("Double");
+	case 4:
+		return CString("Varchar");
+	case 5:
+		return CString("DateTime");
+	default:
+		return CString("未知");
+	}
+}
+int FileOp::GetTypeInt(CString type) {
+	if (type == CString("Integer")) {
+		return 1;
+	}
+	else if (type == CString("Bool")) {
+		return 2;
+	}
+	else if (type == CString("Double")) {
+		return 3;
+	}
+	else if (type == CString("Varchar")) {
+		return 4;
+	}
+	else if (type == CString("DateTime")) {
+		return 5;
+	}
+	else {
+		return 6;
+	}
+}
+
+
+CString FileOp::semicolon(CString& str) {
+	CString final = str.Right(1);
+	int n = str.GetLength();
+	if (final == CString(";")) {
+		CString s = str.Left(n - 1);
+		return s;
+
+	}
+	else {
+		MessageBox(NULL, CString("SQL语句必须以‘；’结尾"), CString("错误"), MB_OK);
+		return str;
+	}
+}
+
+CString FileOp::getbrakets(CString& str) {
+	int begin = str.Find(CString("("));
+	int end = str.GetLength();
+	CString str1 = str.Right(end - begin - 1);
+	str1 = str1.Left(end - begin - 2);
+
+	return str1;
+}
+
+CString FileOp::getbeforebrakets(CString& str) {
+	int begin = str.Find(CString("("));
+	CString str1 = str.Left(begin);
+	return str1;
+}
+
+bool FileOp::paren(CString& str)
+{
+	int n = str.GetLength();
+	char* s;
+	s = (char*)str.GetBuffer(0);
+	stack<char> pi;
+	for (int i = 0; i < n; i++) {
+		if (s[i] == '(')  pi.push(s[i]);
+		else if (!pi.empty())  pi.pop();
+		else return false;
+	}
+	return pi.empty();
+}
+
 
 
 //写日志文件

@@ -6,6 +6,8 @@
 #include "ParseSQL.h"
 #include "TableModel.h"
 #include "TableOp.h"
+#include "FieldOp.h"
+#include "SqlDialog.h"
 // CDBView
 
 IMPLEMENT_DYNCREATE(CDBView, CTreeView)
@@ -23,6 +25,9 @@ BEGIN_MESSAGE_MAP(CDBView, CTreeView)
 	ON_COMMAND(ID_32771, &CDBView::OnCrtDB)
 	ON_COMMAND(ID_32772, &CDBView::OnOpenDB)
 	ON_COMMAND(ID_32774, &CDBView::OnDropDB)
+
+	ON_COMMAND(ID_32791, &CDBView::OnInputSql)
+
 	ON_NOTIFY_REFLECT(NM_RCLICK, &CDBView::OnNMRClick)
 	ON_NOTIFY_REFLECT(TVN_SELCHANGED, &CDBView::OnTvnSelchanged)
 	ON_NOTIFY_REFLECT(TVN_ENDLABELEDIT, &CDBView::OnTvnEndlabeledit)
@@ -31,6 +36,7 @@ BEGIN_MESSAGE_MAP(CDBView, CTreeView)
 	ON_COMMAND(ID_32775, &CDBView::OnCrtTable)
 	ON_COMMAND(ID_32776, &CDBView::OnbtnATable)
 	ON_COMMAND(ID_32777, &CDBView::OnbtnDTable)
+	ON_COMMAND(ID_32781, &CDBView::OnQueryFields)
 END_MESSAGE_MAP()
 
 
@@ -88,6 +94,15 @@ void CDBView::OnInitialUpdate()
 
 }
 
+
+void CDBView::OnInputSql()
+{
+	// TODO: 在此添加命令处理程序代码
+	SqlDialog sqlDialog(NULL,GetSelectedDBName());
+	sqlDialog.DoModal();
+}
+
+
 CString CDBView::GetSelectedDBName() {
 	//m_hCurrDBItem= GetTreeCtrl().GetSelectedItem();
 	if (m_hCurrDBItem)
@@ -103,6 +118,11 @@ CString CDBView::GetSelectedTBName()
 		return m_pTreeCtrl->GetItemText(m_hCurrTBItem);
 	else
 		return NULL;
+}
+void CDBView::GetDBAndTableName(CString& dbName, CString& tbName)
+{
+	dbName = this->GetSelectedDBName();
+	tbName = this->GetSelectedTBName();
 }
 
 void CDBView::DisplayDBList()
@@ -149,8 +169,9 @@ void CDBView::OnDropDB() {
 		//执行删除操作
 		/*CDBOp dbOp;
 		int code = dbOp.DropDatabase(dbName);*/
-		CString crtSql = CString("drop database ") + dbName;
-		ParseSQL::getSql(crtSql);
+		CString Sql = CString("drop database ") + dbName;
+		ParseSQL parse;
+		parse.getSql(Sql);
 		//树形结构更新
 		this->DisplayDBList();
 		
@@ -203,8 +224,9 @@ void CDBView::OnTvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
 		if (name != "")
 		{
 			//生成create语句，解析sql语句，创建数据库
-			CString crtSql = CString("create database ") + name;
-			ParseSQL::getSql(crtSql);
+			CString Sql = CString("create database ") + name;
+			ParseSQL parse;
+			parse.getSql(Sql);
 			/*CDBOp dbOp;
 			int code = dbOp.CreateDatabase(name);*/
 		}
@@ -233,9 +255,9 @@ void CDBView::OnTvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
 		CString newName = pTVDispInfo->item.pszText;
 		if (hItem == m_hCurrDBItem) //数据库节点
 		{
-			if (newName != GetSelectedDBName() && newName.GetLength() > 0)
+			if (newName != GetSelectedDBName() && newName.GetLength() > 0)	//不为空
 			{
-				if (newName == newName.SpanExcluding(L"!@#$%^&*()_+-={}[]:\";'<>?/"))
+				if (newName == newName.SpanExcluding(L"!@#$%^&*()_+-={}[]:\";'<>?/"))	//满足命名规范
 				{
 					CString oldName = GetSelectedDBName();
 
@@ -326,39 +348,10 @@ void CDBView::OnTvnSelchanged(NMHDR* pNMHDR, LRESULT* pResult) {
 	{
 		m_hCurrDBItem = hItem;
 
-
-		//// 禁用字段和记录菜单并刷新菜单栏
-		//GetParentFrame()->GetMenu()->GetSubMenu(2)->EnableMenuItem(1, MF_BYPOSITION | MF_DISABLED);
-		//GetParentFrame()->GetMenu()->GetSubMenu(2)->EnableMenuItem(3, MF_BYPOSITION | MF_DISABLED);
-		//GetParentFrame()->GetMenu()->GetSubMenu(2)->EnableMenuItem(4, MF_BYPOSITION | MF_DISABLED);
-		//GetParentFrame()->GetMenu()->GetSubMenu(2)->EnableMenuItem(5, MF_BYPOSITION | MF_DISABLED);
-		//GetParentFrame()->GetMenu()->EnableMenuItem(3, MF_BYPOSITION | MF_DISABLED);
-		//GetParentFrame()->GetMenu()->EnableMenuItem(4, MF_BYPOSITION | MF_DISABLED);
-		//GetParentFrame()->DrawMenuBar();
-
-		//((CMainFrame*)GetParentFrame())->m_pTableView->ClearTable();
 	}
 	else if (m_pTreeCtrl->GetItemData(hItem) == DBVIEW_TABLE_ITEM)   // 表节点
 	{
-		// 若表对象转换则禁用字段和记录菜单并刷新菜单栏
-		//if (m_hCurrTBItem == hItem)
-		//{
-			//GetParentFrame()->GetMenu()->EnableMenuItem(3, MF_BYPOSITION | MF_DISABLED);
-			//GetParentFrame()->GetMenu()->EnableMenuItem(4, MF_BYPOSITION | MF_DISABLED);
-			//((CMainFrame *)GetParentFrame())->m_pTableView->ClearTable();
-		//}
-
-		//GetParentFrame()->GetMenu()->EnableMenuItem(1, MF_BYPOSITION | MF_DISABLED);
-		//GetParentFrame()->GetMenu()->GetSubMenu(1)->EnableMenuItem(2, MF_BYPOSITION | MF_DISABLED);
-
-		/*
-		GetParentFrame()->GetMenu()->EnableMenuItem(3, MF_BYPOSITION | MF_ENABLED);
-		GetParentFrame()->GetMenu()->EnableMenuItem(4, MF_BYPOSITION | MF_ENABLED);
-		((CMainFrame*)GetParentFrame())->m_pTableView->ClearTable();
-		GetParentFrame()->GetMenu()->GetSubMenu(2)->EnableMenuItem(3, MF_BYPOSITION | MF_ENABLED);
-		GetParentFrame()->GetMenu()->GetSubMenu(2)->EnableMenuItem(4, MF_BYPOSITION | MF_ENABLED);
-		GetParentFrame()->DrawMenuBar();
-		*/
+		
 		m_hCurrTBItem = hItem;
 		m_hCurrDBItem = m_pTreeCtrl->GetParentItem(m_hCurrTBItem);
 		//显示当前表的字段信息
@@ -415,4 +408,15 @@ void CDBView::OnbtnDTable()
 		this->DisplayDBList();
 
 	}
+}
+
+
+void CDBView::OnQueryFields()
+{
+	// TODO: 在此添加命令处理程序代码
+	//清空表
+	CMainFrame* pMainWnd = (CMainFrame*)AfxGetMainWnd();
+	//pMainWnd->m_pTableView->ClearTable();
+	FieldOp fieldop(GetSelectedDBName(),GetSelectedTBName());
+	pMainWnd->m_pTableView->DisplayFields(fieldop.queryFieldsModel(GetSelectedDBName(), GetSelectedTBName()));
 }

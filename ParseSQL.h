@@ -2,7 +2,9 @@
 class ParseSQL
 {
 public:
-	static void getSql(CString &statement);
-
+	void getSql(CString& statement);
+	CString dbmName;
+	void setDB(CString& dbmName);
 };
+
 

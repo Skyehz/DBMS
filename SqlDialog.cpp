@@ -12,8 +12,8 @@
 
 IMPLEMENT_DYNAMIC(SqlDialog, CDialogEx)
 
-SqlDialog::SqlDialog(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(ID_SQL, pParent)
+SqlDialog::SqlDialog(CWnd* pParent,CString &dbName /*=nullptr*/)
+	: CDialogEx(ID_SQL, pParent),dbName(dbName)
 {
 
 }
@@ -43,5 +43,7 @@ void SqlDialog::OnBnClickedOk()
 	CDialogEx::OnOK();
 	CString cstr;
 	GetDlgItem(IDC_EDIT1)->GetWindowText(cstr);
-	ParseSQL::getSql(cstr);
+	ParseSQL parse;
+	parse.setDB(dbName);
+	parse.getSql(cstr);
 }

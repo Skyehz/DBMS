@@ -7,8 +7,11 @@
 #define IDP_OLE_INIT_FAILED             100
 #define IDR_MAINFRAME                   128
 #define IDR_myDBMS1TYPE                 130
-#define IDCANCEL                        1000
+#define IDD_DIALOG1                     312
 #define IDC_EDIT1                       1001
+#define IDCANCEL                        1004
+#define IDC_EDIT2                       1005
+#define IDC_COMBO1                      1006
 #define ID_32771                        32771
 #define ID_32772                        32772
 #define ID_32773                        32773
@@ -30,9 +33,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        310
+#define _APS_NEXT_RESOURCE_VALUE        314
 #define _APS_NEXT_COMMAND_VALUE         32792
-#define _APS_NEXT_CONTROL_VALUE         1000
+#define _APS_NEXT_CONTROL_VALUE         1007
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

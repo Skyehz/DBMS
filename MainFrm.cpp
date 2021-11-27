@@ -7,7 +7,6 @@
 #include "myDBMS1.h"
 //#include "stdafx.h"
 #include "Resource.h"
-#include "SqlDialog.h"
 #include "MainFrm.h"
 #include "DBOp.h"
 
@@ -25,7 +24,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_32771, &CMainFrame::OnCrtDB)
 	ON_COMMAND(ID_32774, &CMainFrame::OnDropDB)
 	ON_COMMAND(ID_32772, &CMainFrame::OnOpenDB)
-	ON_COMMAND(ID_32791, &CMainFrame::OnInputSql)
+	//ON_COMMAND(ID_32791, &CMainFrame::OnInputSql)
 	ON_COMMAND(ID_32773, &CMainFrame::OnRenameDB)
 END_MESSAGE_MAP()
 
@@ -133,13 +132,6 @@ void CMainFrame::OnDropDB()
 	m_pDBView->OnDropDB();
 }
 
-
-void CMainFrame::OnInputSql()
-{
-	// TODO: 在此添加命令处理程序代码
-	SqlDialog sqlDialog;
-	sqlDialog.DoModal();
-}
 
 
 void CMainFrame::OnOpenDB()

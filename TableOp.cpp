@@ -44,7 +44,7 @@ int TableOp::CreateTable(CString& tableName, CString& dbmName) {
 
 		int id = 1;
 		if (tablelist.size() != 0)id = tablelist[tablelist.size() - 1].id + 1;
-		CString folderPath = CString("dbms_root/data/") + dbmName;
+		CString folderPath = CString("./dbms_root/data/") + dbmName;
 
 		CString tablePath = folderPath + CString("/") + dbmName + CString(".tb");//表描述性文件
 

@@ -66,6 +66,15 @@
     <ClInclude Include="TableOp.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="FieldModel.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldOp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="myDBMS1.cpp">
@@ -108,6 +117,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="TableOp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FieldModel.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FieldOp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FieldDialog.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
