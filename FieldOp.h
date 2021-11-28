@@ -18,16 +18,16 @@ public:
 	//FieldOp(CString& tdfPath);
 	//CString tdfpath;
 	//bool addField(CString& dbName, CString& tableName, CString& fieldName, int fieldOrder, int fieldType, int fieldParam, int fieldIntegrities = -1);//添加字段
-				
+
 	//对表字段的增删改查 				
 	bool AddFields(vector<FieldModel> fields);	//sql添加多条字段
 	bool AddOneField(FieldModel& newField);						//添加一条字段															 //增加字段信息
 	bool addFieldInfo(CString& dbName, CString& tableName, FieldModel field);//增加字段信息
-	
+
 
 	/*bool  modifyField(CString& dbName, CString& tableName, CString& fieldName,
 		CString& new_fieldName, int new_fieldOrder, int new_fieldType, int new_fieldParam, int new_fieldIntegrities = -1);*/
-	//修改表内字段信息
+		//修改表内字段信息
 
 	bool ModifyField(FieldModel& field);	//在可视化界面直接修改
 	bool modifyField(CString& fieldName, int new_fieldType, int new_fieldParam);	//sql语句修改

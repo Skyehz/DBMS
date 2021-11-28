@@ -23,7 +23,7 @@ bool FieldOp::AddFields(vector<FieldModel> fields)
 {
 	if (!fields.empty())
 	{
-		for (int i = 0;i<fields.size();i++)
+		for (int i = 0; i < fields.size(); i++)
 		{
 			AddOneField(fields[i]);
 		}
@@ -34,7 +34,7 @@ bool FieldOp::AddFields(vector<FieldModel> fields)
 
 }
 
-bool FieldOp::AddOneField(FieldModel &newField)
+bool FieldOp::AddOneField(FieldModel& newField)
 {
 
 	//判断表定义tdf文件是否存在
@@ -44,9 +44,9 @@ bool FieldOp::AddOneField(FieldModel &newField)
 
 	//创建字段实体
 
-	FieldModel field(newField.GetId(), newField.GetName(), newField.GetType(), newField.GetParam(), newField.GetIntegrities());
+	/*FieldModel field(newField.GetId(), newField.GetName(), newField.GetType(), newField.GetParam(), newField.GetIntegrities());*/
 	//增加字段信息
-	if (!addFieldInfo(dbName, tbName, field))
+	if (!addFieldInfo(dbName, tbName, newField))
 	{
 		return false;
 	}
@@ -78,20 +78,22 @@ bool FieldOp::AddOneField(FieldModel &newField)
 bool FieldOp::addFieldInfo(CString& dbName, CString& tableName, FieldModel field)
 {
 	CString filePath = CString("./dbms_root/data") + CString("/") + dbName +
-		CString("/") +  tableName + CString(".tdf");
-	CString Corder, CType, Cparam, Cintegrities;
-	Corder.Format(_T("%d"), field.GetId());
-	CType.Format(_T("%d"), field.GetType());
-	Cparam.Format(_T("%d"), field.GetParam());
-	Cintegrities.Format(_T("%d"), field.GetIntegrities());
+		CString("/") + tableName + CString(".tdf");
+	//CString Corder, CType, Cparam, Cintegrities;
+	//Corder.Format(_T("%d"), field.GetId());
+	//CType.Format(_T("%d"), field.GetType());
+	//Cparam.Format(_T("%d"), field.GetParam());
+	//Cintegrities.Format(_T("%d"), field.GetIntegrities());
 
-	CString str = Corder + CString(" ") + field.GetName() + CString(" ") + CType +
-		CString(" ") + Cparam + CString(" ") + field.mtime + CString(" ") + Cintegrities;
+	//CString str = Corder + CString(" ") + field.GetName() + CString(" ") + CType +
+	//	CString(" ") + Cparam + CString(" ") + field.mtime + CString(" ") + Cintegrities;
+
+	CString str = field.toString();
 	return(FileOp::AddAnLine(filePath, str));
 }
 
 //修改字段信息
-bool FieldOp::ModifyField(FieldModel &newField)
+bool FieldOp::ModifyField(FieldModel& newField)
 {
 	vector<CString> list = FileOp::ReadAll(tdfPath);
 	if (list.empty())
@@ -104,13 +106,13 @@ bool FieldOp::ModifyField(FieldModel &newField)
 			if (vfield[0] == FileOp::IntegerToString(newField.GetId()))
 			{
 				newField.mtime = FileOp::GetCurrTime();
-				CString str = FileOp::IntegerToString(newField.GetId()) + CString(" ")
+				/*CString str = FileOp::IntegerToString(newField.GetId()) + CString(" ")
 					+ newField.GetName() + CString(" ")
 					+ FileOp::IntegerToString(newField.GetType()) + CString(" ")
 					+ FileOp::IntegerToString(newField.GetParam()) + CString(" ")
 					+ newField.GetMtime() + CString(" ")
-					+ FileOp::IntegerToString(newField.GetIntegrities());
-				*ite = str;
+					+ FileOp::IntegerToString(newField.GetIntegrities());*/
+				*ite = newField.toString();
 				break;
 			}
 		}
@@ -134,7 +136,7 @@ bool FieldOp::modifyField(CString& fieldName, int new_fieldType, int new_fieldPa
 		CString(" ") + Cparam + field.mtime + CString(" ") + Cintegrities;*/
 
 
-	//判断表定义文件tdf是否存在
+		//判断表定义文件tdf是否存在
 	if (!IsTableExist(dbName, tbName))
 		return false;
 	//判断字段是否存在
@@ -217,7 +219,7 @@ bool FieldOp::dropField(CString& dbName, CString& tableName, CString& fieldName)
 
 
 
-	
+
 
 	//查询是否有表内记录（暂定）
 	//如果有，更新记录
@@ -291,7 +293,7 @@ bool FieldOp::IsTableExist(CString& dbName, CString& tableName) {
 	//判断表是否存在
 	//通过调用文件op查看是否存在表
 	CString folderPath = CString("dbms_root/data") + CString("/") + dbName;
-	CString tablePath = folderPath + CString("/")  + tableName + CString(".tdf");
+	CString tablePath = folderPath + CString("/") + tableName + CString(".tdf");
 	return PathFileExists(tablePath);
 }
 //判断字段是否存在
@@ -299,7 +301,7 @@ int  FieldOp::IsFiledExist(CString& dbName, CString& tableName, CString& fieldNa
 {
 
 	//文件路径
-	CString filePath = CString("./dbms_root/data") + CString("/") + dbName  + CString("/") + tableName + CString(".tdf");
+	CString filePath = CString("./dbms_root/data") + CString("/") + dbName + CString("/") + tableName + CString(".tdf");
 	//查询文件，一行一行查询文件名，返回信息
 		//文件op  vector<CString> ReadAll(CString& fileName);
 		//遍历向量，分割，查看是否有该字段

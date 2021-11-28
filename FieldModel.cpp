@@ -5,9 +5,10 @@
 
 #include<atlconv.h>
 
-
-FieldModel::FieldModel(int order, CString name, int type, int param, int integrities) :
-	id(order), name(name), type(type), param(param), integrities(integrities)
+FieldModel::FieldModel(int order, CString name, int type, int param, int integrities
+	, int primaryKey, int uniqueKey, CString defaultValue, CString notes, int empty)
+	:id(order), name(name), type(type), param(param), integrities(integrities)
+	, uniqueKey(uniqueKey), defaultValue(defaultValue), notes(notes), empty(empty)
 {
 	mtime = FileOp::GetCurrTime();
 }
@@ -34,4 +35,23 @@ FieldModel::FieldModel(CString& str)
 
 FieldModel::~FieldModel(void)
 {
+}
+
+CString FieldModel::toString()
+{
+	CString Corder, CType, Cparam, Cintegrities;
+	CString CprimaryKey, CuniqueKey, Cempty;
+	Corder.Format(_T("%d"), this->GetId());
+	CType.Format(_T("%d"), this->GetType());
+	Cparam.Format(_T("%d"), this->GetParam());
+	Cintegrities.Format(_T("%d"), this->GetIntegrities());
+	CprimaryKey.Format(_T("%d"), this->primaryKey);
+	CuniqueKey.Format(_T("%d"), this->uniqueKey);
+	Cempty.Format(_T("%d"), this->empty);
+
+	CString str = Corder + CString(" ") + this->GetName() + CString(" ") + CType +
+		CString(" ") + Cparam + CString(" ") + this->mtime + CString(" ") + Cintegrities + CString(" ") +
+		CprimaryKey + CString(" ") + CuniqueKey + CString(" ") + this->defaultValue + CString(" ") +
+		this->notes + CString(" ") + Cempty;
+	return str;
 }
