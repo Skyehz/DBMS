@@ -4,6 +4,7 @@
 #include "pch.h"
 #include "myDBMS1.h"
 #include "FieldDialog.h"
+#include "DataOp.h"
 #include "afxdialogex.h"
 
 
@@ -70,41 +71,86 @@ void FieldDialog::OnBnClickedOk()
 
 void FieldDialog::AddField()
 {
-	FieldOp fieldLogic(m_dbName, m_tbName);
-	vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName,m_tbName);
-	if (fieldList.empty()) {
-		m_NewField.SetId(0);
-	}
-	else {
-		int curId = fieldList.back().GetId() + 1;
-		m_NewField.SetId(curId);
-	}
-	
-	//int code = fieldLogic.addField(m_dbName, m_tbName,m_NewField.GetName(), m_NewField.GetOrder(), m_NewField.GetType(),m_NewField.GetParam());
-	int code = fieldLogic.AddOneField(m_NewField);
-	if (code == true)
+	bool havePK = false;
+	if (m_NewField.IsPrimaryKey())	//新字段设置了主键
 	{
+		FieldOp fieldLogic(m_dbName, m_tbName);
 		vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
-		m_pTableView->DisplayFields(fieldList);
+		for (vector<FieldModel>::iterator ite = fieldList.begin(); ite != fieldList.end(); ++ite)
+		{
+			if (ite->IsPrimaryKey())
+			{
+
+				MessageBox(L"该表已经有了主键！", L"错误", MB_OK);
+				havePK = true;
+				break;
+
+			}
+		}
 	}
-	else
-		MessageBox(CString("添加错误"), CString("错误"), MB_OK);
+	else {	//新字段没有要设置主键
+		FieldOp fieldLogic(m_dbName, m_tbName);
+		vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
+		if (fieldList.empty()) {
+			m_NewField.SetId(0);
+		}
+		else {
+			int curId = fieldList.back().GetId() + 1;
+			m_NewField.SetId(curId);
+		}
+
+		//int code = fieldLogic.addField(m_dbName, m_tbName,m_NewField.GetName(), m_NewField.GetOrder(), m_NewField.GetType(),m_NewField.GetParam());
+		int code = fieldLogic.AddOneField(m_NewField);
+		if (code == true)
+		{
+			vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
+			m_pTableView->DisplayFields(fieldList);
+		}
+		else
+			MessageBox(CString("添加错误"), CString("错误"), MB_OK);
+	}
 }
 
 void FieldDialog::ModifyField() {
-	m_NewField.SetId(m_fieldEntity.GetId());
-	//m_NewField.SetDefault(m_sDefault);
+	bool havePK = false;
 	FieldOp fieldLogic(m_dbName, m_tbName);
-	vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName,m_tbName);
-
-	int code = fieldLogic.ModifyField(m_NewField);
-	if (code == true)
+	vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
+	if (m_NewField.IsPrimaryKey())
 	{
-		vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
-		m_pTableView->DisplayFields(fieldList);
+		for (vector<FieldModel>::iterator ite = fieldList.begin(); ite != fieldList.end(); ++ite)
+		{
+			if (ite->IsPrimaryKey() && ite->GetId() != m_fieldEntity.GetId())
+			{
+				MessageBox(L"该表已经有了主键！", L"错误", MB_OK);
+				havePK = true; break;
+			}
+		}
 	}
-	else
-		MessageBox(CString("修改错误"), CString("错误"), MB_OK);
+	bool chageType = false;
+	CDataOp dataop(m_dbName, m_tbName);
+	if (!dataop.ReadDataList(fieldList).empty())
+	{
+		if (m_NewField.GetType() != m_fieldEntity.GetType())
+		{
+			MessageBox(L"当记录不为空时无法修改字段类型！", L"提示", MB_OK);
+			chageType = true;
+		}
+	}
+	if (!havePK&&!chageType) {
+		m_NewField.SetId(m_fieldEntity.GetId());
+		//m_NewField.SetDefault(m_sDefault);
+		FieldOp fieldLogic(m_dbName, m_tbName);
+		vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
+
+		int code = fieldLogic.ModifyField(m_NewField);
+		if (code == true)
+		{
+			vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
+			m_pTableView->DisplayFields(fieldList);
+		}
+		else
+			MessageBox(CString("修改错误"), CString("错误"), MB_OK);
+	}
 }
 
 BOOL FieldDialog::OnInitDialog()

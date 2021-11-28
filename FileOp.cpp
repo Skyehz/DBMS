@@ -66,7 +66,7 @@ CString FileOp::GetTypeCString(int type) {
 	}
 }
 int FileOp::GetTypeInt(CString type) {
-	if (type == CString("integer")) {
+	if (type == CString("int")) {
 		return 1;
 	}
 	else if (type == CString("bool")) {
