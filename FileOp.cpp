@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "FileOp.h"
-//#include<string>
 #include <stack>
 
 //获取当前系统时间
@@ -67,19 +66,19 @@ CString FileOp::GetTypeCString(int type) {
 	}
 }
 int FileOp::GetTypeInt(CString type) {
-	if (type == CString("Integer")) {
+	if (type == CString("integer")) {
 		return 1;
 	}
-	else if (type == CString("Bool")) {
+	else if (type == CString("bool")) {
 		return 2;
 	}
-	else if (type == CString("Double")) {
+	else if (type == CString("double")) {
 		return 3;
 	}
-	else if (type == CString("Varchar")) {
+	else if (type == CString("varchar")) {
 		return 4;
 	}
-	else if (type == CString("DateTime")) {
+	else if (type == CString("datetime")) {
 		return 5;
 	}
 	else {
@@ -101,9 +100,9 @@ CString FileOp::semicolon(CString& str) {
 		return str;
 	}
 }
-
 CString FileOp::getbrakets(CString& str) {
 	int begin = str.Find(CString("("));
+	if (begin == -1)return CString("-1");
 	int end = str.GetLength();
 	CString str1 = str.Right(end - begin - 1);
 	str1 = str1.Left(end - begin - 2);
@@ -113,6 +112,7 @@ CString FileOp::getbrakets(CString& str) {
 
 CString FileOp::getbeforebrakets(CString& str) {
 	int begin = str.Find(CString("("));
+	if (begin == -1)return str;
 	CString str1 = str.Left(begin);
 	return str1;
 }
@@ -131,7 +131,48 @@ bool FileOp::paren(CString& str)
 	return pi.empty();
 }
 
+bool FileOp::SaveCounter(CString& filePath, int counter)
+{
+	vector<CString> list = FileOp::ReadAll(filePath);
+	if (list.empty())
+		return false;
+	else
+	{
+		vector<CString> firstRcd = FileOp::StrSplit(list[0], CString("#"));
+		firstRcd[0] = FileOp::IntegerToString(counter);
+		CString newRcd("");
+		for (vector<CString>::iterator ite = firstRcd.begin(); ite != firstRcd.end(); ++ite)
+		{
+			newRcd += *ite + CString("#");
+		}
+		//删除最后一个#
+		newRcd.Delete(newRcd.GetLength() - 1, 1);
+		//把新的第一条记录写入文件
+		list[0] = newRcd;
 
+
+		return true;
+	}
+}
+
+//读取第一条文件的内容
+CString FileOp::ReadFirstLine(CString& fileName) {
+	CString res("");
+	TCHAR con[256];
+	ZeroMemory(con, sizeof(con));
+	char len[4];
+	CFile readfile;
+	bool openRead = readfile.Open(fileName, CFile::modeRead | CFile::typeBinary);
+	if (openRead) {
+
+		readfile.Read(len, 4);
+		int num = atoi(len);
+		readfile.Read(con, num);
+		res = CString(con);
+		readfile.Close();
+	}
+	return res;
+}
 
 //写日志文件
 bool FileOp::WriteLog(CString &info, CString &fileName)

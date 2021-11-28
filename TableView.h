@@ -1,11 +1,12 @@
 #pragma once
 #include <afxcview.h>
 #include"FieldModel.h"
+#include"DataModel.h"
 #include<vector>
 using namespace std;
 #define TABLEVIEW_VALID  0
 #define TABLEVIEW_FIELD  1
-#define TABLEVIEW_RECORD 2
+#define TABLEVIEW_RECORD 1
 
 class CTableView : public CListView
 {
@@ -37,6 +38,7 @@ public:
 	//void DisplayRecords(vector<CString>& rcdlist, vector<FieldModel>& fieldList);
 	void DisplayFields(vector<FieldModel>& fieldList);
 	void ClearTable();
+	void DisplayRecords(vector<CDataModel>& rcdlist, vector<FieldModel>& fieldList);
 	afx_msg void OnAddField();
 	afx_msg void OnDeleteField();
 	afx_msg void OnModifyField();

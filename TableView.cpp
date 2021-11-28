@@ -4,6 +4,7 @@
 #include "FieldOp.h"
 #include "vector"
 #include "FieldDialog.h"
+#include "DataInsertDlg.h"
 #include "FileOp.h"
 #include "MainFrm.h"
 #include <stdlib.h>
@@ -30,6 +31,9 @@ BEGIN_MESSAGE_MAP(CTableView, CListView)
 	/*ON_COMMAND(ID_32783, &CTableView::OnAddRecord)
 	ON_COMMAND(ID_32785, &CTableView::OnDeleteRecord)
 	ON_COMMAND(ID_32784, &CTableView::OnModifyRecord)*/
+	ON_COMMAND(ID_32782, &CTableView::OnAddRecord)
+	ON_COMMAND(ID_32783, &CTableView::OnDeleteRecord)
+	ON_COMMAND(ID_32784, &CTableView::OnModifyRecord)
 END_MESSAGE_MAP()
 
 
@@ -87,8 +91,8 @@ void CTableView::ClearTable()
 
 }
 
-/*
-void CTableView::DisplayRecords(vector<RecordModel>& rcdlist, vector<CString>& fieldList)
+
+void CTableView::DisplayRecords(vector<CDataModel>& rcdlist, vector<FieldModel>& fieldList)
 {
 	m_curView = TABLEVIEW_RECORD;	//视图类型设置为记录视图
 
@@ -97,7 +101,7 @@ void CTableView::DisplayRecords(vector<RecordModel>& rcdlist, vector<CString>& f
 
 	int columnNum = fieldList.size() + 1;
 	//显示字段
-	m_ListCtrl->InsertColumn(0, CString("#"), LVCFMT_LEFT, 0);
+	m_ListCtrl->InsertColumn(0, CString("#"), LVCFMT_LEFT, 20);
 	for (int i = 1; i < columnNum; i++)
 	{
 		m_ListCtrl->InsertColumn(i, fieldList[i - 1].GetName(), LVCFMT_LEFT, 150);
@@ -110,13 +114,14 @@ void CTableView::DisplayRecords(vector<RecordModel>& rcdlist, vector<CString>& f
 		CString cstr;
 		cstr.Format(_T("%d"), rcdlist[i].GetId());
 		m_ListCtrl->InsertItem(i, cstr);
+		m_ListCtrl->SetItemText(i, 0 , FileOp::IntegerToString(rcdlist[i].GetId()));
 		for (int j = 1; j < columnNum; j++)
 		{
 			m_ListCtrl->SetItemText(i, j, rcdlist[i].GetValue(fieldList[j - 1].GetName()));
 		}
 	}
 }
-*/
+
 
 void CTableView::DisplayFields(vector<FieldModel>& fieldList)
 {
@@ -130,12 +135,12 @@ void CTableView::DisplayFields(vector<FieldModel>& fieldList)
 	m_ListCtrl->InsertColumn(3, CString("类型"), LVCFMT_LEFT, 80);
 	m_ListCtrl->InsertColumn(4, CString("长度"), LVCFMT_LEFT, 50);
 	/*m_ListCtrl->InsertColumn(5, CString("最小值"), LVCFMT_LEFT, 100);
-	m_ListCtrl->InsertColumn(6, CString("最大值"), LVCFMT_LEFT, 100);
-	m_ListCtrl->InsertColumn(7, CString("默认值"), LVCFMT_LEFT, 100);
-	m_ListCtrl->InsertColumn(8, CString("主键"), LVCFMT_LEFT, 40);
-	m_ListCtrl->InsertColumn(9, CString("允许空值"), LVCFMT_LEFT, 70);
-	m_ListCtrl->InsertColumn(10, CString("唯一值"), LVCFMT_LEFT, 60);
-	m_ListCtrl->InsertColumn(11, CString("注释"), LVCFMT_LEFT, 100);*/
+	m_ListCtrl->InsertColumn(6, CString("最大值"), LVCFMT_LEFT, 100);*/
+	m_ListCtrl->InsertColumn(5, CString("默认值"), LVCFMT_LEFT, 100);
+	m_ListCtrl->InsertColumn(6, CString("主键"), LVCFMT_LEFT, 40);
+	m_ListCtrl->InsertColumn(7, CString("允许空值"), LVCFMT_LEFT, 70);
+	m_ListCtrl->InsertColumn(8, CString("唯一值"), LVCFMT_LEFT, 60);
+	m_ListCtrl->InsertColumn(9, CString("注释"), LVCFMT_LEFT, 100);
 
 	m_ListCtrl->InsertColumn(0, CString("#"), LVCFMT_LEFT, 0);
 
@@ -264,4 +269,79 @@ void CTableView::OnNMRClick(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 
 	*pResult = 0;
+}
+
+
+void CTableView::OnAddRecord()
+{
+	// TODO: 在此添加命令处理程序代码
+	CString dbName, tbName;
+	((CMainFrame*)GetParentFrame())->m_pDBView->GetDBAndTableName(dbName, tbName);
+
+	FieldOp fieldOp(dbName, tbName);
+	DataInsertDlg addRcdDlg(this,
+		fieldOp.queryFieldsModel(dbName, tbName),
+		dbName,
+		tbName,
+		OPERATE_ADD,
+		vector<CString>());
+
+	addRcdDlg.DoModal();
+}
+
+
+void CTableView::OnModifyRecord()
+{
+	POSITION pos = m_ListCtrl->GetFirstSelectedItemPosition();
+	if (pos != NULL) {
+
+		// TODO: 在此添加命令处理程序代码
+		if (m_curView == TABLEVIEW_RECORD)
+		{
+			int nItem = m_ListCtrl->GetNextSelectedItem(pos);
+
+			int columnNum = m_ListCtrl->GetHeaderCtrl()->GetItemCount();
+			vector<CString> list;
+			for (int i = 0; i < columnNum; i++)
+			{
+				list.push_back(m_ListCtrl->GetItemText(nItem, i));
+			}
+			CString dbName, tbName;
+			((CMainFrame*)GetParentFrame())->m_pDBView->GetDBAndTableName(dbName, tbName);
+			FieldOp fieldOption(dbName, tbName);
+			DataInsertDlg modifyRcdDlg(this,
+				fieldOption.queryFieldsModel(dbName, tbName),
+				dbName,
+				tbName,
+				OPERATE_MODIFY,
+				list);
+			modifyRcdDlg.DoModal();
+		}
+	}
+}
+
+
+
+
+void CTableView::OnDeleteRecord()
+{
+	// TODO: 在此添加命令处理程序代码
+	if (m_curView == TABLEVIEW_RECORD)
+	{
+		if (MessageBox(CString("确定删除该记录？"), CString("删除记录"), MB_OKCANCEL) == IDOK)
+		{
+			CString dbName, tbName;
+			CDBView* pDBView = ((CMainFrame*)GetParentFrame())->m_pDBView;
+			pDBView->GetDBAndTableName(dbName, tbName);
+
+			CDataOp rcdLogic(dbName, tbName);
+			int code = rcdLogic.DeleteRecord(FileOp::StringToInteger(m_ListCtrl->GetItemText(m_iRow, 0)));
+			if (code == YES)
+			{
+				pDBView->OnQueryTable();
+			}
+
+		}
+
+	}
 }

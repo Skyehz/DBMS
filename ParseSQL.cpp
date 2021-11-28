@@ -4,14 +4,13 @@
 #include "DBOp.h"
 #include "FieldOp.h"
 #include "TableOp.h"
-#include <vector>
 #include "FieldModel.h"
-using namespace std;
 
 void ParseSQL::setDB(CString& dbmName) {
 	this->dbmName = dbmName;
 }
 void ParseSQL::getSql(CString& statement) {
+	statement.MakeLower();
 	CString str = FileOp::semicolon(statement);
 	vector<CString> init = FileOp::StrSplit(str, CString(" "));
 
@@ -39,6 +38,7 @@ void ParseSQL::getSql(CString& statement) {
 			int n = field.size();
 			FieldModel fd;
 			for (int i = 0; i < n; i++) {
+				fd.SetId(i);
 				CString len = FileOp::getbrakets(field[i]);
 				fd.SetParam(_ttoi(len));
 				CString fnt = FileOp::getbeforebrakets(field[i]);
@@ -90,8 +90,43 @@ void ParseSQL::getSql(CString& statement) {
 		CString name = init[1];
 
 	}
+	else if (init[0] == CString("alter")) {
+		CString type = init[1];
+		if (type == CString("table")) {
+			alterOp(init);
+		}
+	}
 
-
-
+	return;
 }
 
+
+bool ParseSQL::alterOp(vector<CString> init) {
+	CString tbname = init[2];
+	if (init[3] == CString("add")) {
+		FieldOp fieldop(dbmName, tbname);
+		vector<FieldModel> fieldList = fieldop.queryFieldsModel(dbmName, tbname);
+		int curId = fieldList.back().GetId() + 1;
+		FieldModel m_NewField(curId, init[4], FileOp::GetTypeInt(FileOp::getbeforebrakets(init[5])), FileOp::StringToInteger(FileOp::getbrakets(init[5])), -1);
+		return fieldop.AddOneField(m_NewField);
+	}
+	else if (init[3] == CString("drop") && init[4] == CString("column")) {
+		FieldOp fieldop(dbmName, tbname);
+		vector<FieldModel> fieldList = fieldop.queryFieldsModel(dbmName, tbname);
+		int curId = fieldList.back().GetId() + 1;
+		bool dropF = fieldop.dropField(dbmName, tbname, init[5]);//É¾³ý×Ö¶Î
+		//É¾³ý×Ö¶Î¶ÔÓ¦µÄ¼ÇÂ¼
+		bool dropR=true;
+
+		return dropR && dropF;
+
+	}
+	else if (init[3] == CString("modify") && init[4] == CString("column")) {
+		FieldOp fieldop(dbmName, tbname);
+		vector<FieldModel> fieldList = fieldop.queryFieldsModel(dbmName, tbname);
+		//int curId = fieldList.back().GetId() + 1;
+		return fieldop.modifyField(init[5], FileOp::GetTypeInt(FileOp::getbeforebrakets(init[6])), FileOp::StringToInteger(FileOp::getbrakets(init[6])));
+	}
+	else
+		return false;
+}

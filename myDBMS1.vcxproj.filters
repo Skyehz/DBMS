@@ -75,6 +75,15 @@
     <ClInclude Include="FieldDialog.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="DataModel.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DataOp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DataInsertDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="myDBMS1.cpp">
@@ -126,6 +135,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="FieldDialog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DataModel.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DataOp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DataInsertDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

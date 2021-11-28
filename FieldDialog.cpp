@@ -72,8 +72,14 @@ void FieldDialog::AddField()
 {
 	FieldOp fieldLogic(m_dbName, m_tbName);
 	vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName,m_tbName);
-	int curOrder = fieldList.back().GetId()+1;
-	m_NewField.SetId(curOrder);
+	if (fieldList.empty()) {
+		m_NewField.SetId(0);
+	}
+	else {
+		int curId = fieldList.back().GetId() + 1;
+		m_NewField.SetId(curId);
+	}
+	
 	//int code = fieldLogic.addField(m_dbName, m_tbName,m_NewField.GetName(), m_NewField.GetOrder(), m_NewField.GetType(),m_NewField.GetParam());
 	int code = fieldLogic.AddOneField(m_NewField);
 	if (code == true)
@@ -82,7 +88,7 @@ void FieldDialog::AddField()
 		m_pTableView->DisplayFields(fieldList);
 	}
 	else
-		MessageBox(CString("错误"), CString("错误"), MB_OK);
+		MessageBox(CString("添加错误"), CString("错误"), MB_OK);
 }
 
 void FieldDialog::ModifyField() {
@@ -92,6 +98,13 @@ void FieldDialog::ModifyField() {
 	vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName,m_tbName);
 
 	int code = fieldLogic.ModifyField(m_NewField);
+	if (code == true)
+	{
+		vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
+		m_pTableView->DisplayFields(fieldList);
+	}
+	else
+		MessageBox(CString("修改错误"), CString("错误"), MB_OK);
 }
 
 BOOL FieldDialog::OnInitDialog()

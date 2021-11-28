@@ -56,5 +56,6 @@ public:
 	afx_msg void OnbtnATable();
 	afx_msg void OnbtnDTable();
 	afx_msg void OnQueryFields();
+	afx_msg void OnQueryTable();
 };
 

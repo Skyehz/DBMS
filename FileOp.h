@@ -24,5 +24,7 @@ public:
 	static bool AddAnLine(CString& fileName, CString& str);	//在文件末尾加入一条记录
 	static bool DeleteFolder(CString& folderName);	//删除文件夹
 	static bool ModifyFileName(CString& oldname, CString& newname);
+	static CString FileOp::ReadFirstLine(CString& fileName);//读取第一条文件的内容
+	static bool FileOp::SaveCounter(CString& filePath, int counter);
 };
 

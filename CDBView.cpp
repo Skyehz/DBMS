@@ -3,6 +3,8 @@
 #include "Resource.h"
 #include "MainFrm.h"
 #include "DBOp.h"
+#include "DataOp.h"
+#include "DataModel.h"
 #include "ParseSQL.h"
 #include "TableModel.h"
 #include "TableOp.h"
@@ -37,6 +39,7 @@ BEGIN_MESSAGE_MAP(CDBView, CTreeView)
 	ON_COMMAND(ID_32776, &CDBView::OnbtnATable)
 	ON_COMMAND(ID_32777, &CDBView::OnbtnDTable)
 	ON_COMMAND(ID_32781, &CDBView::OnQueryFields)
+	ON_COMMAND(ID_32792, &CDBView::OnQueryTable)
 END_MESSAGE_MAP()
 
 
@@ -419,4 +422,22 @@ void CDBView::OnQueryFields()
 	//pMainWnd->m_pTableView->ClearTable();
 	FieldOp fieldop(GetSelectedDBName(),GetSelectedTBName());
 	pMainWnd->m_pTableView->DisplayFields(fieldop.queryFieldsModel(GetSelectedDBName(), GetSelectedTBName()));
+}
+
+
+void CDBView::OnQueryTable()
+{
+	// TODO: 在此添加命令处理程序代码
+
+	FieldOp fieldop(GetSelectedDBName(), GetSelectedTBName());//获取字段
+	vector<FieldModel> fieldList = fieldop.queryFieldsModel(GetSelectedDBName(), GetSelectedTBName());
+	CDataOp dataop(GetSelectedDBName(), GetSelectedTBName());
+	vector<CDataModel> dataList = dataop.ReadDataList(fieldList);	//获取记录
+	//清空表
+	CMainFrame* pMainWnd = (CMainFrame*)AfxGetMainWnd();
+	pMainWnd->m_pTableView->ClearTable();
+
+
+	//刷新显示记录表
+	pMainWnd->m_pTableView->DisplayRecords(dataList, fieldList);
 }

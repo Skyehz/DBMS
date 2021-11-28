@@ -98,7 +98,7 @@ bool FieldOp::ModifyField(FieldModel &newField)
 		return false;
 	else
 	{
-		for (vector<CString>::iterator ite = list.begin() + 1; ite != list.end(); ++ite)
+		for (vector<CString>::iterator ite = list.begin(); ite != list.end(); ++ite)
 		{
 			vector<CString> vfield = FileOp::StrSplit(*ite, CString(" "));
 			if (vfield[0] == FileOp::IntegerToString(newField.GetId()))
@@ -121,9 +121,9 @@ bool FieldOp::ModifyField(FieldModel &newField)
 	return false;
 }
 
-bool FieldOp::modifyField(CString& dbName, CString& tableName, CString& fieldName, CString& new_fieldName, int new_fieldOrder, int new_fieldType, int new_fieldParam, int new_fieldIntegrities)
+bool FieldOp::modifyField(CString& fieldName, int new_fieldType, int new_fieldParam)
 {
-	FieldModel field(new_fieldOrder, new_fieldName, new_fieldType, new_fieldParam, new_fieldIntegrities);
+	/*FieldModel field(-1, new_fieldName, new_fieldType, new_fieldParam, new_fieldIntegrities);
 	CString Corder, CType, Cparam, Cintegrities;
 	Corder.Format(_T("%d"), field.GetId());
 	CType.Format(_T("%d"), field.GetType());
@@ -131,30 +131,56 @@ bool FieldOp::modifyField(CString& dbName, CString& tableName, CString& fieldNam
 	Cintegrities.Format(_T("%d"), field.GetIntegrities());
 
 	CString new_field = Corder + CString(" ") + field.GetName() + CString(" ") + CType +
-		CString(" ") + Cparam + field.mtime + CString(" ") + Cintegrities;
-
+		CString(" ") + Cparam + field.mtime + CString(" ") + Cintegrities;*/
 
 
 	//判断表定义文件tdf是否存在
-	if (!IsTableExist(dbName, tableName))
+	if (!IsTableExist(dbName, tbName))
 		return false;
 	//判断字段是否存在
-	int number = IsFiledExist(dbName, tableName, fieldName);
+	int number = IsFiledExist(dbName, tbName, fieldName);
 	if (number == -1)
 		return false;
 	//更新字段信息，写入文件
 		//修改原字段信息
-	CString filePath = CString("./dbms_root/data") + CString("/") + dbName + CString("/") + tableName + CString("/") + tableName + CString(".tdf");
+	/*CString filePath = CString("./dbms_root/data") + CString("/") + dbName + CString("/")  + CString(".tdf");
 	vector<CString>	fields = FileOp::ReadAll(filePath);
 	fields.at(number) = new_field;
-	FileOp::WriteRecord(filePath, fields);
+	FileOp::WriteRecord(filePath, fields);*/
 
+	vector<CString> list = FileOp::ReadAll(tdfPath);
+	CString currId = CString("");
+	CString mtime = CString("");
+	if (list.empty())
+		return false;
+	else
+	{
+		for (vector<CString>::iterator ite = list.begin(); ite != list.end(); ++ite)
+		{
+			vector<CString> vfield = FileOp::StrSplit(*ite, CString(" "));
+			if (vfield[1] == fieldName)
+			{
+				currId = vfield[0];
+				mtime = FileOp::GetCurrTime();
+				CString str = vfield[0] + CString(" ")
+					+ fieldName + CString(" ")
+					+ FileOp::IntegerToString(new_fieldType) + CString(" ")
+					+ FileOp::IntegerToString(new_fieldParam) + CString(" ")
+					+ FileOp::GetCurrTime() + CString(" ")
+					+ FileOp::IntegerToString(1);
+				*ite = str;
+				break;
+			}
+		}
+		return FileOp::WriteRecord(tdfPath, list);
+	}
+
+	return false;
 	//更新索引中存在的字段信息（暂定）
 
 	//查看是否有记录（元组，表内数据）（暂定）
 	//如果有，更新记录
 
-	return true;
 }
 bool FieldOp::dropField(CString& dbName, CString& tableName, CString& fieldName)
 {
