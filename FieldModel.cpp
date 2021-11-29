@@ -16,7 +16,7 @@ FieldModel::FieldModel(int order, CString name, int type, int param, int integri
 FieldModel::FieldModel(CString& str)
 {
 
-	vector<CString> field = FileOp::StrSplit(str, L" ");
+	vector<CString> field = FileOp::StrSplit(str, L"#");
 	USES_CONVERSION;
 	int f_order = atoi(T2A(field.at(0)));
 	int f_type = atoi(T2A(field.at(2)));
@@ -29,8 +29,11 @@ FieldModel::FieldModel(CString& str)
 	this->param = f_param;
 	this->mtime = field.at(4);
 	this->integrities = f_Integrities;
-
-
+	this->primaryKey = atoi(T2A(field.at(6)));
+	this->uniqueKey = atoi(T2A(field.at(7)));
+	this->defaultValue = field.at(8);
+	this->notes = field.at(9);
+	this->empty = atoi(T2A(field.at(10)));
 }
 
 FieldModel::~FieldModel(void)
@@ -49,9 +52,9 @@ CString FieldModel::toString()
 	CuniqueKey.Format(_T("%d"), this->uniqueKey);
 	Cempty.Format(_T("%d"), this->empty);
 
-	CString str = Corder + CString(" ") + this->GetName() + CString(" ") + CType +
-		CString(" ") + Cparam + CString(" ") + this->mtime + CString(" ") + Cintegrities + CString(" ") +
-		CprimaryKey + CString(" ") + CuniqueKey + CString(" ") + this->defaultValue + CString(" ") +
-		this->notes + CString(" ") + Cempty;
+	CString str = Corder + CString("#") + this->GetName() + CString("#") + CType +
+		CString("#") + Cparam + CString("#") + this->mtime + CString("#") + Cintegrities + CString("#") +
+		CprimaryKey + CString("#") + CuniqueKey + CString("#") + this->defaultValue + CString("#") +
+		this->notes + CString("#") + Cempty;
 	return str;
 }

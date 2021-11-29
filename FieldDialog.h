@@ -43,4 +43,9 @@ public:
 
 	void ModifyField();
 
+	BOOL m_primaryKey;
+	CString m_notes;
+	BOOL m_uniqueKey;
+	CString m_defaultValue;
+	BOOL m_empty;
 };

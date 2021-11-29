@@ -9,6 +9,8 @@ public:
 	static vector<CString> StrSplit(CString str, CString split);
 	static CString IntegerToString(int number);
 	static int StringToInteger(CString cstring);
+	static CString BoolToString(bool bl);
+	static bool StringToBool(CString str);
 	static CString GetTypeCString(int type);
 	static int GetTypeInt(CString type);
 	static CString semicolon(CString& str);//¥¶¿Ì∑÷∫≈

@@ -16,6 +16,11 @@ FieldDialog::FieldDialog(CWnd* pParent,CString& dbName,CString& tbName,FieldMode
 	: CDialogEx(IDD_DIALOG1, pParent),  m_dbName(dbName), m_tbName(tbName),m_fieldEntity(fieldEntity), m_iType(type)
 	, fieldName(_T(""))
 	, fieldLength(_T(""))
+	, m_primaryKey(FALSE)
+	, m_notes(_T(""))
+	, m_uniqueKey(FALSE)
+	, m_defaultValue(_T(""))
+	, m_empty(FALSE)
 {
 	m_pTableView = (CTableView*)pParent;
 }
@@ -30,6 +35,11 @@ void FieldDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT1, fieldName);
 	DDX_Text(pDX, IDC_EDIT2, fieldLength);
 	DDX_Control(pDX, IDC_COMBO1, m_combType);
+	DDX_Check(pDX, IDC_CHECK1, m_primaryKey);
+	DDX_Text(pDX, IDC_EDIT4, m_notes);
+	DDX_Check(pDX, IDC_CHECK2, m_uniqueKey);
+	DDX_Text(pDX, IDC_EDIT3, m_defaultValue);
+	DDX_Check(pDX, IDC_CHECK3, m_empty);
 }
 
 
@@ -55,8 +65,14 @@ void FieldDialog::OnBnClickedOk()
 	{
 		m_NewField.SetName(fieldName);
 		m_NewField.SetType(m_iSelType);
+		m_NewField.SetPrimaryKey(m_primaryKey);
+		m_NewField.SetUniqueKey(m_uniqueKey);
+		m_NewField.SetDefaultValue(m_defaultValue);
+		m_NewField.SetNotes(m_notes);
+		m_NewField.SetEmpty(m_empty);
 		USES_CONVERSION;
 		m_NewField.SetParam(atoi(T2A(fieldLength)));
+
 	}
 
 

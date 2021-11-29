@@ -48,6 +48,19 @@ int FileOp::StringToInteger(CString cstring)
 	return atoi(T2A(cstring));
 }
 
+bool FileOp::StringToBool(CString str)
+{
+	if (str == CString("True")) return 1;
+	else return 0;
+}
+
+CString FileOp::BoolToString(bool bl)
+{
+	if (bl == true) return CString("True");
+	else return CString("False");
+}
+
+
 CString FileOp::GetTypeCString(int type) {
 	switch (type)
 	{

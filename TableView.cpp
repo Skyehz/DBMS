@@ -137,9 +137,9 @@ void CTableView::DisplayFields(vector<FieldModel>& fieldList)
 	/*m_ListCtrl->InsertColumn(5, CString("最小值"), LVCFMT_LEFT, 100);
 	m_ListCtrl->InsertColumn(6, CString("最大值"), LVCFMT_LEFT, 100);*/
 	m_ListCtrl->InsertColumn(5, CString("默认值"), LVCFMT_LEFT, 100);
-	m_ListCtrl->InsertColumn(6, CString("主键"), LVCFMT_LEFT, 40);
-	m_ListCtrl->InsertColumn(7, CString("允许空值"), LVCFMT_LEFT, 70);
-	m_ListCtrl->InsertColumn(8, CString("唯一值"), LVCFMT_LEFT, 60);
+	m_ListCtrl->InsertColumn(6, CString("主键"), LVCFMT_LEFT, 60);
+	m_ListCtrl->InsertColumn(7, CString("允许空值"), LVCFMT_LEFT, 100);
+	m_ListCtrl->InsertColumn(8, CString("唯一值"), LVCFMT_LEFT, 100);
 	m_ListCtrl->InsertColumn(9, CString("注释"), LVCFMT_LEFT, 100);
 
 	m_ListCtrl->InsertColumn(0, CString("#"), LVCFMT_LEFT, 0);
@@ -151,6 +151,11 @@ void CTableView::DisplayFields(vector<FieldModel>& fieldList)
 		m_ListCtrl->SetItemText(i, 3, fieldList[i].GetName());
 		m_ListCtrl->SetItemText(i, 4, FileOp::GetTypeCString(fieldList[i].GetType()));
 		m_ListCtrl->SetItemText(i, 5,  FileOp::IntegerToString(fieldList[i].GetParam()));
+		m_ListCtrl->SetItemText(i, 6, fieldList[i].GetDefaultValue());
+		m_ListCtrl->SetItemText(i, 7, FileOp::BoolToString(fieldList[i].GetPrimaryKey()));
+		m_ListCtrl->SetItemText(i, 8, FileOp::BoolToString(fieldList[i].GetEmpty()));
+		m_ListCtrl->SetItemText(i, 9, FileOp::BoolToString(fieldList[i].GetUniqueKey()));
+		m_ListCtrl->SetItemText(i, 10, fieldList[i].GetNotes());
 	}
 	
 }
@@ -204,11 +209,20 @@ void CTableView::OnModifyField()
 			CString dbName, tbName;
 			((CMainFrame*)GetParentFrame())->m_pDBView->GetDBAndTableName(dbName, tbName);
 
+			/*int order, CString name, int type, int param, int integrities
+				, int primaryKey, int uniqueKey, CString defaultValue, CString notes, int empty*/
+
 			FieldModel field(FileOp::StringToInteger(m_ListCtrl->GetItemText(nItem, 2)),
 				m_ListCtrl->GetItemText(nItem, 3),
 				FileOp::GetTypeInt(m_ListCtrl->GetItemText(nItem, 4)),
 				FileOp::StringToInteger(m_ListCtrl->GetItemText(nItem, 5)),
-				1);
+				1,
+				FileOp::StringToBool(m_ListCtrl->GetItemText(nItem, 7)),
+				FileOp::StringToBool(m_ListCtrl->GetItemText(nItem, 9)),
+				m_ListCtrl->GetItemText(nItem, 6),
+				m_ListCtrl->GetItemText(nItem, 10),
+				FileOp::StringToBool(m_ListCtrl->GetItemText(nItem, 8))
+				);
 
 
 			/*field.SetMin(CUtil::StringToInteger(m_ListCtrl->GetItemText(m_iRow, 5)));

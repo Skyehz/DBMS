@@ -107,7 +107,7 @@ bool ParseSQL::alterOp(vector<CString> init) {
 		FieldOp fieldop(dbmName, tbname);
 		vector<FieldModel> fieldList = fieldop.queryFieldsModel(dbmName, tbname);
 		int curId = fieldList.back().GetId() + 1;
-		FieldModel m_NewField(curId, init[4], FileOp::GetTypeInt(FileOp::getbeforebrakets(init[5])), FileOp::StringToInteger(FileOp::getbrakets(init[5])), -1);
+		FieldModel m_NewField(curId, init[4], FileOp::GetTypeInt(FileOp::getbeforebrakets(init[5])), FileOp::StringToInteger(FileOp::getbrakets(init[5])), 0);
 		return fieldop.AddOneField(m_NewField);
 	}
 	else if (init[3] == CString("drop") && init[4] == CString("column")) {
