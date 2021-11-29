@@ -157,8 +157,13 @@ void FieldDialog::ModifyField() {
 		//m_NewField.SetDefault(m_sDefault);
 		FieldOp fieldLogic(m_dbName, m_tbName);
 		vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
-
-		int code = fieldLogic.ModifyField(m_NewField);
+		int code;
+		if (m_NewField.GetName() != m_fieldEntity.GetName()) {	//字段名也进行了修改
+			code = fieldLogic.ModifyField(m_NewField,1);
+		}
+		else {
+			code = fieldLogic.ModifyField(m_NewField, 2);  //没有对字段名进行修改
+		}
 		if (code == true)
 		{
 			vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);

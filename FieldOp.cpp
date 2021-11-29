@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "FieldOp.h"
 #include"FileOp.h"
-
+#include "ParseSQL.h"
 //MFC判断目录下是否包含指定文件。 含文件名。
 #include <shlwapi.h>
 #pragma comment(lib,"Shlwapi.lib") 
@@ -54,27 +54,6 @@ bool FieldOp::AddOneField(FieldModel& newField)
 }
 
 
-
-//bool FieldOp::addField(CString& dbName, CString& tbName, CString& fieldName, int fieldOrder, int fieldType, int fieldParam, int fieldIntegrities)
-//{
-//
-//	//判断表定义tdf文件是否存在
-//	if (!IsTableExist(dbName, tbName))
-//		return false;
-//	//查看表内tdf字段是否存在
-//
-//	//创建字段实体
-//	FieldModel field(fieldOrder, fieldName, fieldType, fieldParam, fieldIntegrities);
-//	//增加字段信息
-//	if (!addFieldInfo(dbName, tbName, field))
-//	{
-//		return false;
-//	}
-//	return true;
-//
-//
-//}
-
 bool FieldOp::addFieldInfo(CString& dbName, CString& tableName, FieldModel field)
 {
 	CString filePath = CString("./dbms_root/data") + CString("/") + dbName +
@@ -85,8 +64,17 @@ bool FieldOp::addFieldInfo(CString& dbName, CString& tableName, FieldModel field
 }
 
 //修改字段信息
-bool FieldOp::ModifyField(FieldModel& newField)
+bool FieldOp::ModifyField(FieldModel& newField, int type)
 {
+	//判断表定义文件tdf是否存在
+	if (!IsTableExist(dbName, tbName))
+		return false;
+	//若不是修改字段名,则判断字段是否存在
+	if (type != 1) {
+		int number = IsFiledExist(dbName, tbName, newField.GetName());
+		if (number == -1)
+			return false;
+	}
 	vector<CString> list = FileOp::ReadAll(tdfPath);
 	if (list.empty())
 		return false;
@@ -98,12 +86,6 @@ bool FieldOp::ModifyField(FieldModel& newField)
 			if (vfield[0] == FileOp::IntegerToString(newField.GetId()))
 			{
 				newField.mtime = FileOp::GetCurrTime();
-				/*CString str = FileOp::IntegerToString(newField.GetId()) + CString(" ")
-					+ newField.GetName() + CString(" ")
-					+ FileOp::IntegerToString(newField.GetType()) + CString(" ")
-					+ FileOp::IntegerToString(newField.GetParam()) + CString(" ")
-					+ newField.GetMtime() + CString(" ")
-					+ FileOp::IntegerToString(newField.GetIntegrities());*/
 				*ite = newField.toString();
 				break;
 			}
@@ -115,56 +97,111 @@ bool FieldOp::ModifyField(FieldModel& newField)
 	return false;
 }
 
-bool FieldOp::modifyField(CString& fieldName, int new_fieldType, int new_fieldParam)
-{
-	//判断表定义文件tdf是否存在
-	if (!IsTableExist(dbName, tbName))
-		return false;
-	//判断字段是否存在
-	int number = IsFiledExist(dbName, tbName, fieldName);
-	if (number == -1)
-		return false;
-	//更新字段信息，写入文件
-	//修改原字段信息
-	/*CString filePath = CString("./dbms_root/data") + CString("/") + dbName + CString("/")  + CString(".tdf");
-	vector<CString>	fields = FileOp::ReadAll(filePath);
-	fields.at(number) = new_field;
-	FileOp::WriteRecord(filePath, fields);*/
-
-	vector<CString> list = FileOp::ReadAll(tdfPath);
-	CString currId = CString("");
-	CString mtime = CString("");
-	if (list.empty())
+bool FieldOp::ModifyFieldSQL(vector<CString> condition, int type) {
+	vector<CString> fieldlist = FileOp::ReadAll(tdfPath);
+	bool flag = false;
+	if (fieldlist.empty())
 		return false;
 	else
 	{
-		for (vector<CString>::iterator ite = list.begin(); ite != list.end(); ++ite)
+		for (vector<CString>::iterator ite = fieldlist.begin(); ite != fieldlist.end(); ++ite)
 		{
 			vector<CString> vfield = FileOp::StrSplit(*ite, CString("#"));
-			if (vfield[1] == fieldName)
+			//修改字段名
+			if (type== ALTER_CHANGE_FIELDNAME && vfield[1] == condition[0])	
 			{
-				currId = vfield[0];
-				mtime = FileOp::GetCurrTime();
-				CString str = vfield[0] + CString("#")
-					+ fieldName + CString("#")
-					+ FileOp::IntegerToString(new_fieldType) + CString("#")
-					+ FileOp::IntegerToString(new_fieldParam) + CString("#")
-					+ FileOp::GetCurrTime() + CString("#")
-					+ FileOp::IntegerToString(1);
-				*ite = str;
-				break;
+				FieldModel newField(FileOp::StringToInteger(vfield[0]), //id
+					condition[1], //name
+					FileOp::GetTypeInt(FileOp::getbeforebrakets(condition[2])),	//类型
+					FileOp::StringToInteger(FileOp::getbrakets(condition[2])),	//长度
+					FileOp::StringToInteger(vfield[5]), //完整性
+					FileOp::StringToInteger(vfield[6]),	//主键
+					FileOp::StringToInteger(vfield[7]),	//唯一值
+					vfield[8], //默认值
+					vfield[9], //注释
+					FileOp::StringToInteger(vfield[10]));	//非空
+				return ModifyField(newField, type);
 			}
+			//修改字段类型
+			else if (type == ALTER_CHANGE_FIELDTYPE && vfield[1] == condition[0]) {
+				FieldModel newField(FileOp::StringToInteger(vfield[0]), //id
+					vfield[1], //name
+					FileOp::GetTypeInt(FileOp::getbeforebrakets(condition[1])),	//类型
+					FileOp::StringToInteger(FileOp::getbrakets(condition[1])),	//长度
+					FileOp::StringToInteger(vfield[5]), //完整性
+					FileOp::StringToInteger(vfield[6]),	//主键
+					FileOp::StringToInteger(vfield[7]),	//唯一值
+					vfield[8], //默认值
+					vfield[9], //注释
+					FileOp::StringToInteger(vfield[10]));	//非空
+				return ModifyField(newField, type);
+			}
+			//设置为非空
+			else if (type == ALTER_ADD_CONSTRANIT_NOTNULL && vfield[1] == condition[0]) {
+				FieldModel newField(FileOp::StringToInteger(vfield[0]), //id
+					vfield[1], //name
+					FileOp::StringToInteger(vfield[2]),	//类型
+					FileOp::StringToInteger(vfield[3]),	//长度
+					FileOp::StringToInteger(vfield[5]), //完整性
+					FileOp::StringToInteger(vfield[6]),	//主键
+					FileOp::StringToInteger(vfield[7]),	//唯一值
+					vfield[8], //默认值
+					vfield[9], //注释
+					1);	//非空
+				return ModifyField(newField, type);
+			}
+			//设置为主键
+			else if (type == ALTER_ADD_CONSTRANIT_PK ) {
+				vector<CString> fieldNames = FileOp::StrSplit(condition[1], CString(","));
+				for (int j = 0; j < fieldNames.size(); j++) {
+					if (vfield[1] == fieldNames[j]) {
+						FieldModel newField(FileOp::StringToInteger(vfield[0]), //id
+							vfield[1], //name
+							FileOp::StringToInteger(vfield[2]),	//类型
+							FileOp::StringToInteger(vfield[3]),	//长度
+							FileOp::StringToInteger(vfield[5]), //完整性
+							1,	//主键
+							FileOp::StringToInteger(vfield[7]),	//唯一值
+							vfield[8], //默认值
+							vfield[9], //注释
+							FileOp::StringToInteger(vfield[10]));	//非空
+						ModifyField(newField, type);
+						break;
+					}
+				}
+			}
+			//设置为唯一值
+			else if (type == ALTER_ADD_CONSTRANIT_UNIQUE) {
+				vector<CString> fieldNames = FileOp::StrSplit(condition[1], CString(","));
+				for (int j = 0; j < fieldNames.size(); j++) {
+					if (vfield[1] == fieldNames[j]) {
+						FieldModel newField(FileOp::StringToInteger(vfield[0]), //id
+							vfield[1], //name
+							FileOp::StringToInteger(vfield[2]),	//类型
+							FileOp::StringToInteger(vfield[3]),	//长度
+							FileOp::StringToInteger(vfield[5]), //完整性
+							FileOp::StringToInteger(vfield[6]),	//主键
+							1,	//唯一值
+							vfield[8], //默认值
+							vfield[9], //注释
+							FileOp::StringToInteger(vfield[10]));	//非空
+						ModifyField(newField, type);
+						break;
+					}
+				}
+			}
+				
+			
+
 		}
-		return FileOp::WriteRecord(tdfPath, list);
+		return flag;
 	}
 
 	return false;
-	//更新索引中存在的字段信息（暂定）
-
-	//查看是否有记录（元组，表内数据）（暂定）
-	//如果有，更新记录
-
 }
+
+
+
 bool FieldOp::dropField(CString& dbName, CString& tableName, CString& fieldName)
 {
 	//判断表定义文件tdf是否存在
@@ -277,6 +314,8 @@ bool FieldOp::IsTableExist(CString& dbName, CString& tableName) {
 	CString tablePath = folderPath + CString("/") + tableName + CString(".tdf");
 	return PathFileExists(tablePath);
 }
+
+
 //判断字段是否存在
 int  FieldOp::IsFiledExist(CString& dbName, CString& tableName, CString& fieldName)
 {

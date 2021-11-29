@@ -184,6 +184,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CDBView.h" />
+    <ClInclude Include="ConstraintModel.h" />
+    <ClInclude Include="ConstraintOp.h" />
     <ClInclude Include="DataInsertDlg.h" />
     <ClInclude Include="DataModel.h" />
     <ClInclude Include="DataOp.h" />
@@ -209,6 +211,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CDBView.cpp" />
+    <ClCompile Include="ConstraintModel.cpp" />
+    <ClCompile Include="ConstraintOp.cpp" />
     <ClCompile Include="DataInsertDlg.cpp" />
     <ClCompile Include="DataModel.cpp" />
     <ClCompile Include="DataOp.cpp" />

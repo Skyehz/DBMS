@@ -5,6 +5,7 @@
 #include "FieldOp.h"
 #include "TableOp.h"
 #include "FieldModel.h"
+#include <string>
 
 void ParseSQL::setDB(CString& dbmName) {
 	this->dbmName = dbmName;
@@ -103,13 +104,17 @@ void ParseSQL::getSql(CString& statement) {
 
 bool ParseSQL::alterOp(vector<CString> init) {
 	CString tbname = init[2];
-	if (init[3] == CString("add")) {
+
+	//添加字段
+	if (init[3] == CString("add") && init[4]!=CString("constraint")){
 		FieldOp fieldop(dbmName, tbname);
 		vector<FieldModel> fieldList = fieldop.queryFieldsModel(dbmName, tbname);
 		int curId = fieldList.back().GetId() + 1;
 		FieldModel m_NewField(curId, init[4], FileOp::GetTypeInt(FileOp::getbeforebrakets(init[5])), FileOp::StringToInteger(FileOp::getbrakets(init[5])), 0);
 		return fieldop.AddOneField(m_NewField);
 	}
+
+	//删除字段
 	else if (init[3] == CString("drop") && init[4] == CString("column")) {
 		FieldOp fieldop(dbmName, tbname);
 		vector<FieldModel> fieldList = fieldop.queryFieldsModel(dbmName, tbname);
@@ -121,12 +126,60 @@ bool ParseSQL::alterOp(vector<CString> init) {
 		return dropR && dropF;
 
 	}
-	else if (init[3] == CString("modify") && init[4] == CString("column")) {
-		FieldOp fieldop(dbmName, tbname);
-		vector<FieldModel> fieldList = fieldop.queryFieldsModel(dbmName, tbname);
-		//int curId = fieldList.back().GetId() + 1;
-		return fieldop.modifyField(init[5], FileOp::GetTypeInt(FileOp::getbeforebrakets(init[6])), FileOp::StringToInteger(FileOp::getbrakets(init[6])));
+
+	//修改字段名 ALTER TABLE 表名 CHANGE 旧字段名 新字段名 字段类型(长度);
+	else if (init[3] == CString("change")) {
+		if (init.size() == 7) {
+			FieldOp fieldop(dbmName, tbname);
+			vector<CString> condition;
+			condition.push_back(init[4]);	//旧字段名
+			condition.push_back(init[5]);	//新字段名
+			condition.push_back(init[6]);	//字段类型(长度);
+
+			return fieldop.ModifyFieldSQL(condition, ALTER_CHANGE_FIELDNAME);
+		}
 	}
+
+	//修改字段类型 ALTER TABLE table_name MODIFY COLUMN column_name datatype;
+	else if (init[3] == CString("modify") && init[4] == CString("column")) {
+		if (init.size() == 7) {
+			FieldOp fieldop(dbmName, tbname);
+			vector<CString> condition;
+			condition.push_back(init[5]);	//字段名
+			condition.push_back(init[6]);	//新字段类型(长度);
+
+			return fieldop.ModifyFieldSQL(condition, ALTER_CHANGE_FIELDTYPE);
+		}
+	}
+
+	//设置为非空 ALTER TABLE table_name MODIFY column_name datatype NOT NULL;
+	else if (init[3] == CString("modify") && init.size() == 8 && init[6] == CString("not") && init[7] == CString("null")) {
+		FieldOp fieldop(dbmName, tbname);
+		vector<CString> condition;
+		condition.push_back(init[4]);	//字段名
+		return fieldop.ModifyFieldSQL(condition, ALTER_ADD_CONSTRANIT_NOTNULL);
+	}
+
+	//修改字段约束条件
+	//  ALTER TABLE table_name ADD CONSTRAINT MyPrimaryKey PRIMARY KEY(column1, column2...);
+	//	ALTER TABLE table_name ADD CONSTRAINT MyUniqueConstraint UNIQUE(column1, column2...);
+	else if (init[3] == CString("add") && init[4] == CString("constraint")) {
+		FieldOp fieldop(dbmName, tbname);
+		vector<CString> condition;
+		condition.push_back(init[5]);	//约束名
+		if (init[6].Find(CString("unique")) >= 0) {		
+			condition.push_back(FileOp::getbrakets(init[6])); //进行约束的字段：字段名1，字段名2，...
+			return fieldop.ModifyFieldSQL(condition, ALTER_ADD_CONSTRANIT_UNIQUE);
+		}
+		else if(init[6]==CString("primary")&& init[7].Find(CString("key")) >= 0){
+			condition.push_back(FileOp::getbrakets(init[7])); //进行约束的字段：字段名1，字段名2，...
+			return fieldop.ModifyFieldSQL(condition, ALTER_ADD_CONSTRANIT_PK);
+		}
+		
+	}
+
+
+
 	else
 		return false;
 }

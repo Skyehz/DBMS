@@ -7,7 +7,7 @@
 
 FieldModel::FieldModel(int order, CString name, int type, int param, int integrities
 	, int primaryKey, int uniqueKey, CString defaultValue, CString notes, int empty)
-	:id(order), name(name), type(type), param(param), integrities(integrities)
+	:id(order), name(name), type(type), param(param), integrities(integrities),primaryKey(primaryKey)
 	, uniqueKey(uniqueKey), defaultValue(defaultValue), notes(notes), empty(empty)
 {
 	mtime = FileOp::GetCurrTime();

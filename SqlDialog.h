@@ -1,5 +1,5 @@
 ﻿#pragma once
-
+#include "TableView.h"
 
 // SqlDialog 对话框
 
@@ -21,6 +21,8 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
+	CTableView* m_pTableView;
+
 	CString dbName;
 	CEdit Edit_sql;
 	afx_msg void OnBnClickedOk();

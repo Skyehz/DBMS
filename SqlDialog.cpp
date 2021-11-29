@@ -15,7 +15,7 @@ IMPLEMENT_DYNAMIC(SqlDialog, CDialogEx)
 SqlDialog::SqlDialog(CWnd* pParent,CString &dbName /*=nullptr*/)
 	: CDialogEx(ID_SQL, pParent),dbName(dbName)
 {
-
+	m_pTableView = (CTableView*)pParent;
 }
 
 SqlDialog::~SqlDialog()
@@ -46,4 +46,5 @@ void SqlDialog::OnBnClickedOk()
 	ParseSQL parse;
 	parse.setDB(dbName);
 	parse.getSql(cstr);
+
 }
