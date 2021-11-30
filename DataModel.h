@@ -15,6 +15,7 @@ public:
 	int GetId() { return m_id; };
 	CString GetValue(CString propety) { return m_mValues[propety]; };
 	map<CString, CString> GetValues() { return m_mValues; };
+	void SetValues(map<CString, CString> m_map) { m_mValues = m_map; }
 	void SetId(int id) { m_id = id; };
 	void SetValue(CString propety, CString value) { m_mValues[propety] = value; };
 };

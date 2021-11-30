@@ -11,6 +11,8 @@ public:
 	ConstraintModel(CString &str);
 	~ConstraintModel();
 
+	CString toString();
+
 	//Get²Ù×÷
 	CString GetName() { return name; };
 	CString GetField() { return field; };

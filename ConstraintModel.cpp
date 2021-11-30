@@ -24,3 +24,8 @@ ConstraintModel::ConstraintModel(CString& str)
 ConstraintModel::~ConstraintModel()
 {
 }
+
+CString ConstraintModel::toString() {
+	CString str = this->GetName() + this->GetField() + FileOp::IntegerToString(this->GetType()) + this->GetParam();
+	return str;
+}

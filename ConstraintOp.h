@@ -11,5 +11,6 @@ public:
 	~ConstraintOp();
 public:
 	bool AddConstraint(ConstraintModel &new_cst);	//添加一个新约束
+	bool DeleteConstraint(ConstraintModel& cst);	//删除约束
 };
 

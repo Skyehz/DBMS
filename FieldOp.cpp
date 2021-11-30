@@ -60,7 +60,7 @@ bool FieldOp::addFieldInfo(CString& dbName, CString& tableName, FieldModel field
 		CString("/") + tableName + CString(".tdf");
 
 	CString str = field.toString();
-	return(FileOp::AddAnLine(filePath, str));
+	return (FileOp::AddAnLine(filePath, str));
 }
 
 //修改字段信息
@@ -190,6 +190,22 @@ bool FieldOp::ModifyFieldSQL(vector<CString> condition, int type) {
 					}
 				}
 			}
+			//设置默认值
+			else if (type == ALTER_ADD_CONSTRANIT_DEFAULT) {
+				FieldModel newField(FileOp::StringToInteger(vfield[0]), //id
+					vfield[1], //name
+					FileOp::StringToInteger(vfield[2]),	//类型
+					FileOp::StringToInteger(vfield[3]),	//长度
+					FileOp::StringToInteger(vfield[5]), //完整性
+					FileOp::StringToInteger(vfield[6]),	//主键
+					FileOp::StringToInteger(vfield[7]),	//唯一值
+					condition[2], //默认值
+					vfield[9], //注释
+					FileOp::StringToInteger(vfield[10]));	//非空
+				return ModifyField(newField, type);
+			}
+
+
 				
 			
 

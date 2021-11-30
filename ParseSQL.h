@@ -7,6 +7,7 @@ using namespace std;
 #define ALTER_ADD_CONSTRANIT_PK 3
 #define ALTER_ADD_CONSTRANIT_NOTNULL 4
 #define ALTER_ADD_CONSTRANIT_UNIQUE 5
+#define ALTER_ADD_CONSTRANIT_DEFAULT 5
 
 class ParseSQL
 {

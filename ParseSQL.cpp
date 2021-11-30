@@ -5,7 +5,8 @@
 #include "FieldOp.h"
 #include "TableOp.h"
 #include "FieldModel.h"
-#include <string>
+#include "DataModel.h"
+#include <map>
 
 void ParseSQL::setDB(CString& dbmName) {
 	this->dbmName = dbmName;
@@ -128,7 +129,7 @@ bool ParseSQL::alterOp(vector<CString> init) {
 	}
 
 	//修改字段名 ALTER TABLE 表名 CHANGE 旧字段名 新字段名 字段类型(长度);
-	else if (init[3] == CString("change")) {
+	else if (init[3] == CString("change") && init[4]!= CString("column")) {
 		if (init.size() == 7) {
 			FieldOp fieldop(dbmName, tbname);
 			vector<CString> condition;
@@ -152,7 +153,20 @@ bool ParseSQL::alterOp(vector<CString> init) {
 		}
 	}
 
-	//设置为非空 ALTER TABLE table_name MODIFY column_name datatype NOT NULL;
+	//添加约束条件 设置默认值 ALTER TABLE 表名 CHANGE COLUMN 字段名 数据类型 DEFAULT 默认值
+	else if (init[3] == CString("change") && init[4] == CString("column") && init[7] == CString("default") && init.size() == 9) {
+		
+		FieldOp fieldop(dbmName, tbname);
+		vector<CString> condition;
+		condition.push_back(init[5]);	//字段名
+		condition.push_back(init[6]);	//数据类型
+		condition.push_back(init[8]);	//默认值
+
+		return fieldop.ModifyFieldSQL(condition, ALTER_ADD_CONSTRANIT_DEFAULT);
+		
+	}
+
+	//添加约束条件 设置为非空 ALTER TABLE table_name MODIFY column_name datatype NOT NULL;
 	else if (init[3] == CString("modify") && init.size() == 8 && init[6] == CString("not") && init[7] == CString("null")) {
 		FieldOp fieldop(dbmName, tbname);
 		vector<CString> condition;
@@ -160,7 +174,7 @@ bool ParseSQL::alterOp(vector<CString> init) {
 		return fieldop.ModifyFieldSQL(condition, ALTER_ADD_CONSTRANIT_NOTNULL);
 	}
 
-	//修改字段约束条件
+	//添加约束条件 添加主键、唯一值
 	//  ALTER TABLE table_name ADD CONSTRAINT MyPrimaryKey PRIMARY KEY(column1, column2...);
 	//	ALTER TABLE table_name ADD CONSTRAINT MyUniqueConstraint UNIQUE(column1, column2...);
 	else if (init[3] == CString("add") && init[4] == CString("constraint")) {
@@ -178,8 +192,180 @@ bool ParseSQL::alterOp(vector<CString> init) {
 		
 	}
 
-
-
 	else
 		return false;
+}
+
+//获得group by之后的结果
+vector<vector<CDataModel>> getGroupByRes(vector<CDataModel> &whereRes,CString &field) {
+	vector<CString> distinctList;
+	vector<vector<CDataModel>> groupbyRes;
+	bool isExist = false;
+	if (!whereRes.empty()) {
+		//筛选出whereRes中不重复的所有值
+		for (vector<CDataModel>::iterator ite = whereRes.begin(); ite != whereRes.end(); ++ite) {
+			CString content = ite->GetValue(field);
+			if (distinctList.empty())
+				distinctList.push_back(content);
+			else {
+				for (int j = 0; j < distinctList.size(); j++) {
+					if (content == distinctList.at(j)) {
+						isExist = true;
+						break;
+					}
+				}
+				if (isExist == false) distinctList.push_back(content);
+			}
+		}
+		
+		vector<CDataModel> whereRest = whereRes;
+		for (int i = 0; i < distinctList.size();i++) {
+			vector<CDataModel> temp;
+			for (int j = 0; j < whereRest.size();j++) {
+				if (distinctList[i] == whereRest[j].GetValue(field)) {
+					temp.push_back(whereRest[j]);
+					//whereRest.erase(whereRest[j]);
+				}
+			}
+			groupbyRes.push_back(temp);
+		}
+
+		return groupbyRes;
+	}
+	else 
+		return groupbyRes;
+}
+
+//筛选having条件之后的结果
+vector<CDataModel> getHavingRes(vector<vector<CDataModel>> &groupRes,CString &condition) {
+	if (condition.Find(CString("sum(")) != -1) {
+
+	}
+
+}
+
+//获得排序后的结果 (正序或倒序)
+vector<CDataModel> getOrderBy(vector<CDataModel> &list, CString &field, int type) {
+	vector<CDataModel> orderRes;
+
+	//倒序
+	if (type == 1) {
+		int max = INT_MIN;
+		for (int count = 0; count < list.size(); count++) {
+			//找到最大值
+			for (vector<CDataModel>::iterator ite = list.begin(); ite != list.end(); ++ite)
+			{
+				int now = FileOp::StringToInteger(ite->GetValue(field));
+				if (now > max)
+					max = now;
+			}
+			//将最大值对应的对象加入orderRes
+			for (vector<CDataModel>::iterator ite = list.begin(); ite != list.end(); ++ite) {
+				if (max == FileOp::StringToInteger(ite->GetValue(field))) {
+					orderRes.push_back(*ite);
+					list.erase(ite);
+					break;
+				}
+			}
+			max = INT_MIN;
+		}
+	}
+	//正序
+	else {
+		int min = INT_MAX;
+		for (int count = 0; count < list.size(); count++) {
+			//找到最小值
+			for (vector<CDataModel>::iterator ite = list.begin(); ite != list.end(); ++ite)
+			{
+				int now = FileOp::StringToInteger(ite->GetValue(field));
+				if (now < min)
+					min = now;
+			}
+			//将最小值对应的对象加入orderRes
+			for (vector<CDataModel>::iterator ite = list.begin(); ite != list.end(); ++ite) {
+				if (min == FileOp::StringToInteger(ite->GetValue(field))) {
+					orderRes.push_back(*ite);
+					list.erase(ite);
+					break;
+				}
+			}
+			min = INT_MAX;
+		}
+	}
+	return orderRes;
+}
+
+//获得经过group by之后的 聚组函数sum 结果
+vector<CDataModel> getSumRes(vector<vector<CDataModel>> &groupRes, CString &field) {
+	int currID = 0;
+	vector<CDataModel> sumRes;
+	for (int i = 0; i < groupRes.size(); i++) {
+		vector<CDataModel> temp = groupRes[i];
+		int sum = 0;
+		for (int j = 0; j < temp.size(); j++) {
+			sum += FileOp::StringToInteger(temp[j].GetValue(field)); //将field字段的所有值求和
+		}
+
+		map<CString, CString> m = temp[0].GetValues();
+		m.insert(pair<CString, CString>(CString("sum"),FileOp::IntegerToString(sum)));	//添加新字段 sum
+		CDataModel new_data;
+		new_data.SetId(currID++);
+		new_data.SetValues(m);
+		sumRes.push_back(new_data);
+	}
+
+	return sumRes;
+}
+
+
+//获得经过group by之后的 聚组函数count   count(*)所有   count(列)列非空
+vector<CDataModel> getCountRes(vector<vector<CDataModel>> &groupRes, CString &field) {
+	int currID = 0;
+	vector<CDataModel> countRes;
+	for (int i = 0; i < groupRes.size(); i++) {
+		vector<CDataModel> temp = groupRes[i];
+		int count = 0;
+		if (field == CString("*")) {
+			count = temp.size();
+		}
+		else {
+			for (int j = 0; j < temp.size(); j++) {
+				if (temp[j].GetValue(field) != CString(""))	//非空列
+					count++;
+			}
+		}
+
+		map<CString, CString> m = temp[0].GetValues();
+		m.insert(pair<CString, CString>(CString("count"), FileOp::IntegerToString(count)));	//添加新字段 avg
+		CDataModel new_data;
+		new_data.SetId(currID++);
+		new_data.SetValues(m);
+		countRes.push_back(new_data);
+	}
+	return countRes;
+}
+
+//获得经过group by之后的 聚组函数avg
+vector<CDataModel> getAvgRes(vector<vector<CDataModel>> &groupRes, CString &field) {
+	vector<CDataModel> sumRes = getSumRes(groupRes, field);
+	vector<CDataModel> countRes = getSumRes(groupRes, CString("*"));
+
+	int currID = 0;
+	vector<CDataModel> avgRes;
+	for (int i = 0; i < groupRes.size(); i++) {
+		vector<CDataModel> temp = groupRes[i];
+		double avg = 0;
+		int sum = FileOp::StringToInteger(sumRes[i].GetValue(CString("sum")));
+		int count = FileOp::StringToInteger(sumRes[i].GetValue(CString("count")));
+		avg =(double)sum /(double)count;
+
+		map<CString, CString> m = temp[0].GetValues();
+		m.insert(pair<CString, CString>(CString("avg"), FileOp::IntegerToString(avg)));	//添加新字段 avg
+		CDataModel new_data;
+		new_data.SetId(currID++);
+		new_data.SetValues(m);
+		avgRes.push_back(new_data);
+	}
+
+	return avgRes;
 }
