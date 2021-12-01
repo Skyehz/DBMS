@@ -8,6 +8,7 @@
 #include "FileOp.h"
 #include "MainFrm.h"
 #include <stdlib.h>
+#include "ParseSQL.h"
 using namespace std;
 // CTableView
 
@@ -177,21 +178,39 @@ void CTableView::OnDeleteField()
 		{
 			int nItem = m_ListCtrl->GetNextSelectedItem(pos);
 			fieldName = m_ListCtrl->GetItemText(nItem, 3);
-
 			CString dbName, tbName;
 			((CMainFrame*)GetParentFrame())->m_pDBView->GetDBAndTableName(dbName, tbName);
-			FieldOp fieldLogic(dbName, tbName);
 
-			int code = fieldLogic.dropField(dbName, tbName,fieldName);
-			if (code == 1)
+			//É¾³ý×Ö¶Î ALTER TABLE table_name DROP COLUMN column_name
+			CString statement = CString("alter table ") + tbName + CString(" drop column ") +fieldName + CString(";");
+
+			ParseSQL parseSql;
+			parseSql.setDB(dbName);
+			vector<CDataModel> m = parseSql.getSql(statement);
+
+			if (m.empty())
 			{
+				MessageBox(CString("É¾³ý³É¹¦"), CString("³É¹¦"), MB_OK);
+				FieldOp fieldLogic(dbName, tbName);
 				vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(dbName, tbName);
-				this->DisplayFields(fieldList);
+				DisplayFields(fieldList);
 			}
 			else
-			{
-				MessageBox(CString("É¾³ý×Ö¶Î´íÎó£¡"), CString("´íÎó"), MB_OK);
-			}
+				MessageBox(CString("É¾³ýÊ§°Ü"), CString("´íÎó"), MB_OK);
+
+		
+			//FieldOp fieldLogic(dbName, tbName);
+
+			//int code = fieldLogic.DeleteField(fieldName);
+			//if (code == 1)
+			//{
+			//	vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(dbName, tbName);
+			//	this->DisplayFields(fieldList);
+			//}
+			//else
+			//{
+			//	MessageBox(CString("É¾³ý×Ö¶Î´íÎó£¡"), CString("´íÎó"), MB_OK);
+			//}
 		}
 	}
 }
@@ -338,22 +357,26 @@ void CTableView::OnModifyRecord()
 void CTableView::OnDeleteRecord()
 {
 	// TODO: ÔÚ´ËÌí¼ÓÃüÁî´¦Àí³ÌÐò´úÂë
-	if (m_curView == TABLEVIEW_RECORD)
+	POSITION pos = m_ListCtrl->GetFirstSelectedItemPosition();
+	if (pos != NULL)
 	{
 		if (MessageBox(CString("È·¶¨É¾³ý¸Ã¼ÇÂ¼£¿"), CString("É¾³ý¼ÇÂ¼"), MB_OKCANCEL) == IDOK)
 		{
 			CString dbName, tbName;
 			CDBView* pDBView = ((CMainFrame*)GetParentFrame())->m_pDBView;
-			pDBView->GetDBAndTableName(dbName, tbName);
+			int nItem = m_ListCtrl->GetNextSelectedItem(pos);
 
-			CDataOp rcdLogic(dbName, tbName);
-			int code = rcdLogic.DeleteRecord(FileOp::StringToInteger(m_ListCtrl->GetItemText(m_iRow, 0)));
-			if (code == YES)
-			{
-				pDBView->OnQueryTable();
-			}
+			pDBView->GetDBAndTableName(dbName, tbName);
+			CString statement;
+
+			statement = CString("delete from ") + tbName + CString(" where ")+ CString("#=") + m_ListCtrl->GetItemText(nItem, 0) + CString(";");
+			ParseSQL parseSql;
+			parseSql.setDB(dbName);
+			parseSql.getSql(statement);
+			/*CDataOp rcdLogic(dbName, tbName);
+			int code = rcdLogic.DeleteRecord(FileOp::StringToInteger(m_ListCtrl->GetItemText(nItem, 0)));*/
+			pDBView->OnQueryTable();
 
 		}
-
 	}
 }

@@ -16,11 +16,14 @@ using namespace std;
 void ParseSQL::setDB(CString& dbmName) {
 	this->dbmName = dbmName;
 }
-void ParseSQL::getSql(CString& statement) {
+
+
+vector<CDataModel> ParseSQL::getSql(CString& statement) {
 	statement.MakeLower();
 	CString str = FileOp::semicolon(statement);
 	vector<CString> init = FileOp::StrSplit(str, CString(" "));
 
+	vector<CDataModel> res;
 
 	//新建库或表
 	if (init[0] == CString("create")) {
@@ -46,7 +49,7 @@ void ParseSQL::getSql(CString& statement) {
 
 			for (int i = 0; i < n; i++) {
 				FieldModel fd;
-				fd.SetId(i);
+				fd.SetId(i+1);	//id从1开始设置
 				CString len = FileOp::getbrakets(field[i]);
 				fd.SetParam(_ttoi(len));
 				CString fnt = FileOp::getbeforebrakets(field[i]);
@@ -87,7 +90,7 @@ void ParseSQL::getSql(CString& statement) {
 		else
 		{
 			MessageBox(NULL, CString("创建失败"), CString("提示"), MB_OK);
-			return;
+			return res;
 		}
 	}
 	//删除库或表
@@ -97,16 +100,18 @@ void ParseSQL::getSql(CString& statement) {
 			CString name = init[2];
 			CDBOp dbOp;
 			int code = dbOp.DropDatabase(name);
+			return res;
 		}
 		else if (type == CString("table")) {
 			CString name = init[2];
 			TableOp tbOp;
 			int code = tbOp.DropTable(name, this->dbmName);
-
+			return res;
 		}
 		else
-			return;
+			return res;
 	}
+	//重命名表
 	else if (init[0] == CString("rename")) {
 		if (init[1] == CString("table")) {
 			CString currentName = init[3];
@@ -117,12 +122,16 @@ void ParseSQL::getSql(CString& statement) {
 			}
 		}
 	}
+	//插入数据
 	else if (init[0] == CString("insert") && init[1] == CString("into")) {
 		insertOp(init);
+		return res;
 	}
+	//查询数据
 	else if (init[0] == CString("select")) {
-		selectOp(str);
+		res = selectOp(str);
 	}
+	//修改表
 	else if (init[0] == CString("alter")) {
 		CString type = init[1];
 		if (type == CString("table")) {
@@ -130,27 +139,39 @@ void ParseSQL::getSql(CString& statement) {
 		}
 	}
 
-
-	LogOp logOp(this->dbmName);
+	else if (init[0] == CString("delete") && init[1] == CString("from")) {
+		deleteOp(init);
+	}
+	else if (init[0] == CString("update")) {
+		updateOp(init);
+	}
+	/*LogOp logOp(this->dbmName);
 	LogModel logModel(statement);
-	logOp.WriteOneLog(logModel);
-	return;
+	logOp.WriteOneLog(logModel);*/
+	return res;
 }
 
 
 bool ParseSQL::alterOp(vector<CString> init) {
 	CString tbname = init[2];
-
-	//添加字段
+	//添加字段 alter table t2 add col_name type;
 	if (init[3] == CString("add") && init[4]!=CString("constraint")){
 		FieldOp fieldop(dbmName, tbname);
 		vector<FieldModel> fieldList = fieldop.queryFieldsModel(dbmName, tbname);
+
+		if (fieldList.empty()) {
+			FieldModel fm;
+			fm.SetId(0);
+			fm.SetName(CString("@"));
+			fieldop.AddOneField(fm);
+		}
+
 		int curId = fieldList.back().GetId() + 1;
 		FieldModel m_NewField(curId, init[4], FileOp::GetTypeInt(FileOp::getbeforebrakets(init[5])), FileOp::StringToInteger(FileOp::getbrakets(init[5])), 0);
 		return fieldop.AddOneField(m_NewField);
 	}
 
-	//删除字段
+	//删除字段 ALTER TABLE table_name DROP COLUMN column_name
 	else if (init[3] == CString("drop") && init[4] == CString("column")) {
 		FieldOp fieldop(dbmName, tbname);
 		vector<FieldModel> fieldList = fieldop.queryFieldsModel(dbmName, tbname);
@@ -160,7 +181,6 @@ bool ParseSQL::alterOp(vector<CString> init) {
 		bool dropR=true;
 
 		return dropR && dropF;
-
 	}
 
 	//修改字段名 ALTER TABLE 表名 CHANGE 旧字段名 新字段名 字段类型(长度);
@@ -547,6 +567,7 @@ vector<CDataModel> ParseSQL::selectOp(CString str) {
 		CDataOp dop(this->dbmName, tablelist[0]);
 		if (init[1] == "*") {
 			fieldmodellist = fop.queryFieldsModel(this->dbmName, tablelist[0]);
+			fieldlist = fop.queryFields(this->dbmName, tablelist[0]);
 			recordlist = dop.ReadDataList(fieldmodellist);
 			res = recordlist;
 		}
@@ -564,11 +585,13 @@ vector<CDataModel> ParseSQL::selectOp(CString str) {
 			for (int i = 0; i < tablelist.size(); i++) {
 				FieldOp fop(this->dbmName, tablelist[i]);
 				CDataOp dop(this->dbmName, tablelist[i]);
-				fieldmodellist = fop.queryFieldsModel(this->dbmName, tablelist[i]);
-				vector<CDataModel> r = dop.ReadDataList(fieldmodellist);
-				for (int j = 0; j < fieldmodellist.size(); j++) {
-					fieldmodellist[i].SetName(tablelist[i] + CString(".") + fieldmodellist[j].GetName());
+				vector<FieldModel>f = fop.queryFieldsModel(this->dbmName, tablelist[i]);
+				for (int j = 0; j < f.size(); j++) {
+					f[j].SetName(tablelist[i] + CString(".") + f[j].GetName());
 				}
+				fieldmodellist.insert(fieldmodellist.end(), f.begin(), f.end());
+				vector<CDataModel> r = dop.ReadDataList(f);
+
 				for (int k = 0; k < r.size(); k++) {
 					CDataModel dm;
 					dm.SetId(k);
@@ -576,7 +599,7 @@ vector<CDataModel> ParseSQL::selectOp(CString str) {
 
 					map<CString, CString>::iterator it;
 					for (it = data.begin(); it != data.end(); ++it) {
-						dm.SetValue(tablelist[i] + CString(".") + it->first, it->second);
+						dm.SetValue(it->first, it->second);
 					}
 					recordlist.push_back(dm);
 				}
@@ -600,18 +623,21 @@ vector<CDataModel> ParseSQL::selectOp(CString str) {
 			for (int i = 0; i < tablelist.size(); i++) {
 				FieldOp fop(this->dbmName, tablelist[i]);
 				CDataOp dop(this->dbmName, tablelist[i]);
-				fieldmodellist = fop.queryFieldsModel(this->dbmName, tablelist[i]);
-				vector<CDataModel> r = dop.ReadDataList(fieldmodellist);
-				for (int j = 0; j < fieldmodellist.size(); j++) {
-					fieldmodellist[i].SetName(tablelist[i] + CString(".") + fieldmodellist[j].GetName());
+				vector<FieldModel>f = fop.queryFieldsModel(this->dbmName, tablelist[i]);
+				for (int j = 0; j < f.size(); j++) {
+					f[j].SetName(tablelist[i] + CString(".") + f[j].GetName());
 				}
+				fieldmodellist.insert(fieldmodellist.end(), f.begin(), f.end());
+				vector<CDataModel> r = dop.ReadDataList(f);
+
 				for (int k = 0; k < r.size(); k++) {
 					CDataModel dm;
 					dm.SetId(k);
 					map<CString, CString> data = r[k].GetValues();
+
 					map<CString, CString>::iterator it;
 					for (it = data.begin(); it != data.end(); ++it) {
-						dm.SetValue(tablelist[i] + CString(".") + it->first, it->second);
+						dm.SetValue(it->first, it->second);
 					}
 					recordlist.push_back(dm);
 				}
@@ -621,10 +647,10 @@ vector<CDataModel> ParseSQL::selectOp(CString str) {
 	}
 	//where
 	if (temp4.size() != 1) {
-		res = whereOp(temp4[1], res);
+		res = whereOp(temp4[1], res, fieldmodellist);
 
 	}
-	
+
 	//group by
 	if (temp3.size() != 1) {
 		CString groupField = temp3[1];
@@ -632,14 +658,13 @@ vector<CDataModel> ParseSQL::selectOp(CString str) {
 	}
 	//having
 	if (temp2.size() != 1) {
-		
-		res = getHavingRes(groupRes, res,temp3[1],temp2[1]);
-		
+
+		//res = getHavingRes(groupRes, res,temp3[1],temp2[1]);
+
 	}
 	//order by
 	if (temp1.size() != 1) {
-		//判断正序或倒序
-		res = getOrderBy(res, temp1[1],1);
+
 	}
 	vector<CDataModel> res1;
 
@@ -664,7 +689,7 @@ vector<CDataModel> ParseSQL::selectOp(CString str) {
 	return res1;
 }
 
-vector<CDataModel> ParseSQL::whereOp(CString& str, vector<CDataModel> recordlist) {
+vector<CDataModel> ParseSQL::whereOp(CString& str, vector<CDataModel> recordlist, vector<FieldModel>& fieldmodellist) {
 	vector<CDataModel> res;
 	vector<CString> con1 = FileOp::StrSplit(str, CString(" or "));
 	for (int i = 0; i < con1.size(); i++) {
@@ -673,7 +698,7 @@ vector<CDataModel> ParseSQL::whereOp(CString& str, vector<CDataModel> recordlist
 		for (int j = 0; j < con2.size(); j++) {
 			vector<CDataModel> res2;
 			for (int k = 0; k < res1.size(); k++) {
-				if (altOp(con2[j], res1[k])) {
+				if (altOp(con2[j], res1[k], fieldmodellist, recordlist)) {
 					res2.push_back(res1[k]);
 				}
 			}
@@ -681,27 +706,106 @@ vector<CDataModel> ParseSQL::whereOp(CString& str, vector<CDataModel> recordlist
 		}
 		res.insert(res.end(), res1.begin(), res1.end());
 	}
-	////res去掉重复元素
-	//set<CDataModel>s(res.begin(), res.end());
-	//res.assign(s.begin(), s.end());
+
 
 	return res;
 }
 
 
-bool ParseSQL::altOp(CString& str, CDataModel& record) {
+bool ParseSQL::altOp(CString& str, CDataModel& record, vector<FieldModel>& fieldmodellist, vector<CDataModel>& recordlist) {
 	map<CString, CString>r;
+	bool field1 = false;//是否为字段名
+	bool field2 = false;
+	bool num = false;//是否为数字
+	CString field11;
+	CString field12;
+	double v1;
+	double v2;
+
+
 	if (str.Find(CString("=")) != -1) {
 		vector<CString>temp = FileOp::StrSplit(str, CString("="));
 		CString value1 = temp[0];
 		CString value2 = temp[1];
-		r = record.GetValues();
+		r = record.GetValues();//当前record的值
 		map<CString, CString>::iterator it;
+		for (int i = 0; i < fieldmodellist.size(); i++) {
+			if (fieldmodellist[i].GetName() == value1) {
+				field1 = true;
+				if (fieldmodellist[i].GetType() == 1 || fieldmodellist[i].GetType() == 3)num = true;
+			}
+			if (fieldmodellist[i].GetName() == value2) {
+				field2 = true;
+				if (fieldmodellist[i].GetType() == 1 || fieldmodellist[i].GetType() == 3)num = true;
+			}
+		}
+
 		for (it = r.begin(); it != r.end(); ++it) {
-			if (it->first == value1)value1 = it->second;
-			if (it->first == value2)value2 = it->second;
+			FieldModel fm;
+			if (it->first == value1) {
+				for (int i = 0; i < fieldmodellist.size(); i++) {
+					if (fieldmodellist[i].GetName() == value1) {
+						fm = fieldmodellist[i];
+					}
+					if (field1) { if (IntegrityVerify(it->second, fm)) { field11 = value1; value1 = it->second; } }
+					if (field1 && field2) {
+						for (int i = 0; i < recordlist.size(); i++) {
+							if (num) {
+								v1 = _ttof(value1);
+								v2 = _ttof(recordlist[i].GetValue(value2));
+								if (v1 == v2)return true;
+							}
+							else {
+								if (value1 == recordlist[i].GetValue(value2))
+									return true;
+							}
+						}
+						return false;
+					}
+				}
+			}
+			if (it->first == value2) {
+				for (int i = 0; i < fieldmodellist.size(); i++) {
+					if (fieldmodellist[i].GetName() == value2) {
+						fm = fieldmodellist[i];
+					}
+					if (field2) { if (IntegrityVerify(it->second, fm)) { field12 = value2; value2 = it->second; } }
+					if (field1 && field2) {
+						for (int i = 0; i < recordlist.size(); i++) {
+							if (num) {
+								v1 = _ttof(recordlist[i].GetValue(value1));
+								v2 = _ttof(value2);
+								if (v1 == v2)return true;
+							}
+							else {
+								if (value2 == recordlist[i].GetValue(value1))
+									return true;
+							}
+						}
+						return false;
+					}
+				}
+
+			}
+		}
+		if (num) {
+			v1 = _ttof(value1);
+			v2 = _ttof(value2);
+
+			if (v1 == v2)return true;
+			else return false;
+		}
+		if (!field1) {
+			if (value1.Find(CString("\"")) != -1)value2 = value1.Mid(1, value1.GetLength() - 2);
+			if (value1.Find(CString("\'")) != -1)value2 = value1.Mid(1, value1.GetLength() - 2);
+		}
+		if (!field2) {
+			if (value2.Find(CString("\"")) != -1)value2 = value2.Mid(1, value2.GetLength() - 2);
+			if (value2.Find(CString("\'")) != -1)value2 = value2.Mid(1, value2.GetLength() - 2);
 		}
 		if (value1 == value2)return true;
+		else return false;
+
 
 	}
 	else if (str.Find(CString("<>")) != -1) {
@@ -710,11 +814,81 @@ bool ParseSQL::altOp(CString& str, CDataModel& record) {
 		CString value2 = temp[1];
 		r = record.GetValues();
 		map<CString, CString>::iterator it;
+		for (int i = 0; i < fieldmodellist.size(); i++) {
+			if (fieldmodellist[i].GetName() == value1) {
+				field1 = true;
+				if (fieldmodellist[i].GetType() == 1 || fieldmodellist[i].GetType() == 3)num = true;
+			}
+			if (fieldmodellist[i].GetName() == value2) {
+				field2 = true;
+				if (fieldmodellist[i].GetType() == 1 || fieldmodellist[i].GetType() == 3)num = true;
+			}
+		}
+
 		for (it = r.begin(); it != r.end(); ++it) {
-			if (it->first == value1)value1 = it->second;
-			if (it->first == value2)value2 = it->second;
+			FieldModel fm;
+			if (it->first == value1) {
+				for (int i = 0; i < fieldmodellist.size(); i++) {
+					if (fieldmodellist[i].GetName() == value1) {
+						fm = fieldmodellist[i];
+					}
+					if (field1) { if (IntegrityVerify(it->second, fm)) { field11 = value1; value1 = it->second; } }
+					if (field1 && field2) {
+						for (int i = 0; i < recordlist.size(); i++) {
+							if (num) {
+								v1 = _ttof(value1);
+								v2 = _ttof(recordlist[i].GetValue(value2));
+								if (v1 != v2)return true;
+							}
+							else {
+								if (value1 != recordlist[i].GetValue(value2))
+									return true;
+							}
+						}
+						return false;
+					}
+				}
+			}
+			if (it->first == value2) {
+				for (int i = 0; i < fieldmodellist.size(); i++) {
+					if (fieldmodellist[i].GetName() == value2) {
+						fm = fieldmodellist[i];
+					}
+					if (field2) { if (IntegrityVerify(it->second, fm)) { field12 = value2; value2 = it->second; } }
+					if (field1 && field2) {
+						for (int i = 0; i < recordlist.size(); i++) {
+							if (num) {
+								v1 = _ttof(recordlist[i].GetValue(value1));
+								v2 = _ttof(value2);
+								if (v1 != v2)return true;
+							}
+							else {
+								if (value2 != recordlist[i].GetValue(value1))
+									return true;
+							}
+						}
+						return false;
+					}
+				}
+
+			}
+		}
+		if (num) {
+			v1 = _ttof(value1);
+			v2 = _ttof(value2);
+			if (v1 != v2)return true;
+			else return false;
+		}
+		if (!field1) {
+			if (value1.Find(CString("\"")) != -1)value2 = value1.Mid(1, value1.GetLength() - 2);
+			if (value1.Find(CString("\'")) != -1)value2 = value1.Mid(1, value1.GetLength() - 2);
+		}
+		if (!field2) {
+			if (value2.Find(CString("\"")) != -1)value2 = value2.Mid(1, value2.GetLength() - 2);
+			if (value2.Find(CString("\'")) != -1)value2 = value2.Mid(1, value2.GetLength() - 2);
 		}
 		if (value1 != value2)return true;
+		else return false;
 	}
 	else if (str.Find(CString("<=")) != -1) {
 		vector<CString>temp = FileOp::StrSplit(str, CString("<="));
@@ -722,11 +896,82 @@ bool ParseSQL::altOp(CString& str, CDataModel& record) {
 		CString value2 = temp[1];
 		r = record.GetValues();
 		map<CString, CString>::iterator it;
-		for (it = r.begin(); it != r.end(); ++it) {
-			if (it->first == value1)value1 = it->second;
-			if (it->first == value2)value2 = it->second;
+		for (int i = 0; i < fieldmodellist.size(); i++) {
+			if (fieldmodellist[i].GetName() == value1) {
+				field1 = true;
+				if (fieldmodellist[i].GetType() == 1 || fieldmodellist[i].GetType() == 3)num = true;
+			}
+			if (fieldmodellist[i].GetName() == value2) {
+				field2 = true;
+				if (fieldmodellist[i].GetType() == 1 || fieldmodellist[i].GetType() == 3)num = true;
+			}
 		}
-		if (value1 < value2 || value1 == value2)return true;
+
+		for (it = r.begin(); it != r.end(); ++it) {
+			FieldModel fm;
+			if (it->first == value1) {
+				for (int i = 0; i < fieldmodellist.size(); i++) {
+					if (fieldmodellist[i].GetName() == value1) {
+						fm = fieldmodellist[i];
+					}
+					if (field1) { if (IntegrityVerify(it->second, fm)) { field11 = value1; value1 = it->second; } }
+					if (field1 && field2) {
+						for (int i = 0; i < recordlist.size(); i++) {
+							if (num) {
+								v1 = _ttof(value1);
+								v2 = _ttof(recordlist[i].GetValue(value2));
+								if (v1 == v2 || v1 < v2)return true;
+							}
+							else {
+								if (value1 == recordlist[i].GetValue(value2) || value1 < recordlist[i].GetValue(value2))
+									return true;
+							}
+						}
+						return false;
+					}
+				}
+			}
+			if (it->first == value2) {
+				for (int i = 0; i < fieldmodellist.size(); i++) {
+					if (fieldmodellist[i].GetName() == value2) {
+						fm = fieldmodellist[i];
+					}
+					if (field2) { if (IntegrityVerify(it->second, fm)) { field12 = value2; value2 = it->second; } }
+					if (field1 && field2) {
+						for (int i = 0; i < recordlist.size(); i++) {
+							if (num) {
+								v1 = _ttof(recordlist[i].GetValue(value1));
+								v2 = _ttof(value2);
+								if (v1 == v2 || v1 < v2)return true;
+							}
+							else {
+								if (value2 == recordlist[i].GetValue(value1) || value2 > recordlist[i].GetValue(value1))
+									return true;
+							}
+						}
+						return false;
+					}
+				}
+
+			}
+		}
+		if (num) {
+			v1 = _ttof(value1);
+			v2 = _ttof(value2);
+
+			if (v1 == v2 || v1 < v2)return true;
+			else return false;
+		}
+		if (!field1) {
+			if (value1.Find(CString("\"")) != -1)value2 = value1.Mid(1, value1.GetLength() - 2);
+			if (value1.Find(CString("\'")) != -1)value2 = value1.Mid(1, value1.GetLength() - 2);
+		}
+		if (!field2) {
+			if (value2.Find(CString("\"")) != -1)value2 = value2.Mid(1, value2.GetLength() - 2);
+			if (value2.Find(CString("\'")) != -1)value2 = value2.Mid(1, value2.GetLength() - 2);
+		}
+		if (value1 == value2 || value1 < value2)return true;
+		else return false;
 
 	}
 	else if (str.Find(CString(">=")) != -1) {
@@ -735,11 +980,82 @@ bool ParseSQL::altOp(CString& str, CDataModel& record) {
 		CString value2 = temp[1];
 		r = record.GetValues();
 		map<CString, CString>::iterator it;
-		for (it = r.begin(); it != r.end(); ++it) {
-			if (it->first == value1)value1 = it->second;
-			if (it->first == value2)value2 = it->second;
+		for (int i = 0; i < fieldmodellist.size(); i++) {
+			if (fieldmodellist[i].GetName() == value1) {
+				field1 = true;
+				if (fieldmodellist[i].GetType() == 1 || fieldmodellist[i].GetType() == 3)num = true;
+			}
+			if (fieldmodellist[i].GetName() == value2) {
+				field2 = true;
+				if (fieldmodellist[i].GetType() == 1 || fieldmodellist[i].GetType() == 3)num = true;
+			}
 		}
-		if (value1 > value2 || value1 == value2)return true;
+
+		for (it = r.begin(); it != r.end(); ++it) {
+			FieldModel fm;
+			if (it->first == value1) {
+				for (int i = 0; i < fieldmodellist.size(); i++) {
+					if (fieldmodellist[i].GetName() == value1) {
+						fm = fieldmodellist[i];
+					}
+					if (field1) { if (IntegrityVerify(it->second, fm)) { field11 = value1; value1 = it->second; } }
+					if (field1 && field2) {
+						for (int i = 0; i < recordlist.size(); i++) {
+							if (num) {
+								v1 = _ttof(value1);
+								v2 = _ttof(recordlist[i].GetValue(value2));
+								if (v1 == v2 || v1 > v2)return true;
+							}
+							else {
+								if (value1 == recordlist[i].GetValue(value2) || value1 > recordlist[i].GetValue(value2))
+									return true;
+							}
+						}
+						return false;
+					}
+				}
+			}
+			if (it->first == value2) {
+				for (int i = 0; i < fieldmodellist.size(); i++) {
+					if (fieldmodellist[i].GetName() == value2) {
+						fm = fieldmodellist[i];
+					}
+					if (field2) { if (IntegrityVerify(it->second, fm)) { field12 = value2; value2 = it->second; } }
+					if (field1 && field2) {
+						for (int i = 0; i < recordlist.size(); i++) {
+							if (num) {
+								v1 = _ttof(recordlist[i].GetValue(value1));
+								v2 = _ttof(value2);
+								if (v1 == v2 || v1 > v2)return true;
+							}
+							else {
+								if (value2 == recordlist[i].GetValue(value1) || value2 < recordlist[i].GetValue(value1))
+									return true;
+							}
+						}
+						return false;
+					}
+				}
+
+			}
+		}
+		if (num) {
+			v1 = _ttof(value1);
+			v2 = _ttof(value2);
+
+			if (v1 == v2 || v1 > v2)return true;
+			else return false;
+		}
+		if (!field1) {
+			if (value1.Find(CString("\"")) != -1)value2 = value1.Mid(1, value1.GetLength() - 2);
+			if (value1.Find(CString("\'")) != -1)value2 = value1.Mid(1, value1.GetLength() - 2);
+		}
+		if (!field2) {
+			if (value2.Find(CString("\"")) != -1)value2 = value2.Mid(1, value2.GetLength() - 2);
+			if (value2.Find(CString("\'")) != -1)value2 = value2.Mid(1, value2.GetLength() - 2);
+		}
+		if (value1 == value2 || value1 > value2)return true;
+		else return false;
 
 	}
 	else if (str.Find(CString(">")) != -1) {
@@ -748,11 +1064,82 @@ bool ParseSQL::altOp(CString& str, CDataModel& record) {
 		CString value2 = temp[1];
 		r = record.GetValues();
 		map<CString, CString>::iterator it;
+		for (int i = 0; i < fieldmodellist.size(); i++) {
+			if (fieldmodellist[i].GetName() == value1) {
+				field1 = true;
+				if (fieldmodellist[i].GetType() == 1 || fieldmodellist[i].GetType() == 3)num = true;
+			}
+			if (fieldmodellist[i].GetName() == value2) {
+				field2 = true;
+				if (fieldmodellist[i].GetType() == 1 || fieldmodellist[i].GetType() == 3)num = true;
+			}
+		}
+
 		for (it = r.begin(); it != r.end(); ++it) {
-			if (it->first == value1)value1 = it->second;
-			if (it->first == value2)value2 = it->second;
+			FieldModel fm;
+			if (it->first == value1) {
+				for (int i = 0; i < fieldmodellist.size(); i++) {
+					if (fieldmodellist[i].GetName() == value1) {
+						fm = fieldmodellist[i];
+					}
+					if (field1) { if (IntegrityVerify(it->second, fm)) { field11 = value1; value1 = it->second; } }
+					if (field1 && field2) {
+						for (int i = 0; i < recordlist.size(); i++) {
+							if (num) {
+								v1 = _ttof(value1);
+								v2 = _ttof(recordlist[i].GetValue(value2));
+								if (v1 > v2)return true;
+							}
+							else {
+								if (value1 > recordlist[i].GetValue(value2))
+									return true;
+							}
+						}
+						return false;
+					}
+				}
+			}
+			if (it->first == value2) {
+				for (int i = 0; i < fieldmodellist.size(); i++) {
+					if (fieldmodellist[i].GetName() == value2) {
+						fm = fieldmodellist[i];
+					}
+					if (field2) { if (IntegrityVerify(it->second, fm)) { field12 = value2; value2 = it->second; } }
+					if (field1 && field2) {
+						for (int i = 0; i < recordlist.size(); i++) {
+							if (num) {
+								v1 = _ttof(recordlist[i].GetValue(value1));
+								v2 = _ttof(value2);
+								if (v1 > v2)return true;
+							}
+							else {
+								if (value2 < recordlist[i].GetValue(value1))
+									return true;
+							}
+						}
+						return false;
+					}
+				}
+
+			}
+		}
+		if (num) {
+			v1 = _ttof(value1);
+			v2 = _ttof(value2);
+
+			if (v1 > v2)return true;
+			else return false;
+		}
+		if (!field1) {
+			if (value1.Find(CString("\"")) != -1)value2 = value1.Mid(1, value1.GetLength() - 2);
+			if (value1.Find(CString("\'")) != -1)value2 = value1.Mid(1, value1.GetLength() - 2);
+		}
+		if (!field2) {
+			if (value2.Find(CString("\"")) != -1)value2 = value2.Mid(1, value2.GetLength() - 2);
+			if (value2.Find(CString("\'")) != -1)value2 = value2.Mid(1, value2.GetLength() - 2);
 		}
 		if (value1 > value2)return true;
+		else return false;
 
 	}
 	else if (str.Find(CString("<")) != -1) {
@@ -761,27 +1148,102 @@ bool ParseSQL::altOp(CString& str, CDataModel& record) {
 		CString value2 = temp[1];
 		r = record.GetValues();
 		map<CString, CString>::iterator it;
+		for (int i = 0; i < fieldmodellist.size(); i++) {
+			if (fieldmodellist[i].GetName() == value1) {
+				field1 = true;
+				if (fieldmodellist[i].GetType() == 1 || fieldmodellist[i].GetType() == 3)num = true;
+			}
+			if (fieldmodellist[i].GetName() == value2) {
+				field2 = true;
+				if (fieldmodellist[i].GetType() == 1 || fieldmodellist[i].GetType() == 3)num = true;
+			}
+		}
+
 		for (it = r.begin(); it != r.end(); ++it) {
-			if (it->first == value1)value1 = it->second;
-			if (it->first == value2)value2 = it->second;
+			FieldModel fm;
+			if (it->first == value1) {
+				for (int i = 0; i < fieldmodellist.size(); i++) {
+					if (fieldmodellist[i].GetName() == value1) {
+						fm = fieldmodellist[i];
+					}
+					if (field1) { if (IntegrityVerify(it->second, fm)) { field11 = value1; value1 = it->second; } }
+					if (field1 && field2) {
+						for (int i = 0; i < recordlist.size(); i++) {
+							if (num) {
+								v1 = _ttof(value1);
+								v2 = _ttof(recordlist[i].GetValue(value2));
+								if (v1 < v2)return true;
+							}
+							else {
+								if (value1 < recordlist[i].GetValue(value2))
+									return true;
+							}
+						}
+						return false;
+					}
+				}
+			}
+			if (it->first == value2) {
+				for (int i = 0; i < fieldmodellist.size(); i++) {
+					if (fieldmodellist[i].GetName() == value2) {
+						fm = fieldmodellist[i];
+					}
+					if (field2) { if (IntegrityVerify(it->second, fm)) { field12 = value2; value2 = it->second; } }
+					if (field1 && field2) {
+						for (int i = 0; i < recordlist.size(); i++) {
+							if (num) {
+								v1 = _ttof(recordlist[i].GetValue(value1));
+								v2 = _ttof(value2);
+								if (v1 < v2)return true;
+							}
+							else {
+								if (value2 > recordlist[i].GetValue(value1))
+									return true;
+							}
+						}
+						return false;
+					}
+				}
+
+			}
+		}
+		if (num) {
+			v1 = _ttof(value1);
+			v2 = _ttof(value2);
+
+			if (v1 < v2)return true;
+			else return false;
+		}
+		if (!field1) {
+			if (value1.Find(CString("\"")) != -1)value2 = value1.Mid(1, value1.GetLength() - 2);
+			if (value1.Find(CString("\'")) != -1)value2 = value1.Mid(1, value1.GetLength() - 2);
+		}
+		if (!field2) {
+			if (value2.Find(CString("\"")) != -1)value2 = value2.Mid(1, value2.GetLength() - 2);
+			if (value2.Find(CString("\'")) != -1)value2 = value2.Mid(1, value2.GetLength() - 2);
 		}
 		if (value1 < value2)return true;
+		else return false;
 
 	}
 	return false;
 }
 
+
 bool ParseSQL::deleteOp(vector<CString> init) {
 	CString name = init[2];
 	if (init[3] == CString("where")) {
-		for (int i = 1; i < init.size(); i++) {
-			init[i] = init[i - 1];
+		for (int i = 1; i<init.size(); i++) {
+			init[i-1] = init[i];
 		}
 		init[0] = CString("select");
 		init[1] = CString("*");
 		CString selectStr;
-		for (int i = 0; i < init.size(); i++) {
-			selectStr += init[0] + CString(" ");
+		for (int i = 0; i < init.size()-1; i++) {
+			if (i == 2) {
+				selectStr += CString("from ") + name + CString(" ");
+			}
+			selectStr += init[i] + CString(" ");
 		}
 		selectStr = selectStr.Left(selectStr.GetLength() - 1);
 		vector<CDataModel> res = selectOp(selectStr);
@@ -798,24 +1260,28 @@ bool ParseSQL::deleteOp(vector<CString> init) {
 	return false;
 }
 
+//update t1 set name=ccc where id=1;
 bool ParseSQL::updateOp(vector<CString> init) {
-	CString name = init[2];
-	if (init[3] == CString("set") && init[5] == CString("where")) {
+	CString name = init[1];
+	if (init[2] == CString("set") && init[4] == CString("where")) {
 		vector<CString> select;
 		vector<CString>temp;
-		temp = FileOp::StrSplit(init[4], CString("="));
+		temp = FileOp::StrSplit(init[3], CString("="));
 		CString field = temp[0];
 		CString value = temp[1];
 
 		select.push_back(CString("select"));
 		select.push_back(CString("*"));
-		for (int i = 5; i < init.size(); i++) {
+		select.push_back(CString("from"));
+		select.push_back(name);
+		for (int i = 4; i < init.size(); i++) {
 			select.push_back(init[i]);
 		}
 		CDataOp dp(this->dbmName, name);
 		CString selectStr;
 		for (int i = 0; i < select.size(); i++) {
-			selectStr += select[0] + CString(" ");
+
+			selectStr += select[i] + CString(" ");
 		}
 		selectStr = selectStr.Left(selectStr.GetLength() - 1);
 		vector<CDataModel> records = selectOp(selectStr);
@@ -826,4 +1292,118 @@ bool ParseSQL::updateOp(vector<CString> init) {
 		return true;
 	}
 	return false;
+}
+
+
+bool OnlyHaveNumber(CString& str)
+{
+	bool isOK = TRUE;
+	if (str != str.SpanIncluding(_T("1234567890")))
+		isOK = FALSE;
+	return isOK;
+}
+bool OnlyHaveNumberAndDot(CString& str)
+{
+	bool isOK = TRUE;
+	if (str != str.SpanIncluding(_T("1234567890.")))
+		isOK = FALSE;
+	return isOK;
+}
+
+
+int ParseSQL::IntegrityVerify(CString& val, FieldModel& field)
+{
+	CString sAftText = _T("");
+	for (int i = 0; i < val.GetLength(); i++)
+	{
+		if (val.Mid(i, 2) != _T("\"\""))
+		{
+			sAftText += val.Mid(i, 2);
+		}
+		else
+		{
+			sAftText += _T("");
+		}
+	}
+
+	//完整性
+	switch (field.GetType())
+	{
+	case 1://integer
+	{
+		if (OnlyHaveNumber(sAftText))
+		{
+			//(判断是否符合范围大小)
+			int iVal = FileOp::StringToInteger(sAftText);
+			//return 数字范围错误
+		}
+		else
+		{
+			return INTEGRITY_ERROR_TYPE;
+		}
+		break;
+	}
+	case 2://布尔
+	{
+		if (sAftText != "true" && sAftText != "false")
+			return INTEGRITY_ERROR_TYPE;
+		break;
+	}
+	case 3://double类型
+	{
+		if (OnlyHaveNumberAndDot(sAftText))
+		{
+			//判断double范围是否符合（待）
+		}
+		else
+			return INTEGRITY_ERROR_TYPE;
+
+		break;
+	}
+	case 4://varchar*类型
+	{
+
+		if (val.GetLength() > field.GetParam())
+		{
+			return INTEGRITY_TOO_LONG;
+		}
+		break;
+	}
+	case 5://datatime类型
+	{
+		if (sAftText != sAftText.SpanIncluding(_T("1234567890-")) || sAftText.GetLength() != 10)
+			return INTEGRITY_ERROR_TYPE;
+		else
+		{
+			//2014-09-02
+			for (int i = 0; i < 10; i++)
+			{
+				if (i != 4 && i != 7)
+				{
+					if (sAftText[i] > '9' || sAftText[i] < '0')
+						return INTEGRITY_ERROR_DATETYPE;
+				}
+			}
+
+			if (sAftText[4] != '-' || sAftText[7] != '-')
+				return INTEGRITY_ERROR_DATETYPE;
+			CString date = sAftText;
+			vector<CString> ymd = FileOp::StrSplit(date, CString("-"));
+			int m = FileOp::StringToInteger(ymd[1]);
+			int d = FileOp::StringToInteger(ymd[2]);
+			if (m > 12 || (m == 2 && d > 28))
+				return INTEGRITY_ERROR_DATETYPE;
+
+			if (((m == 1 || m == 3 || m == 5 || m == 7 || m == 8 || m == 10 || m == 12) && d > 31) ||
+				((m == 2 || m == 4 || m == 6 || m == 9 || m == 11) && d > 30))
+				return INTEGRITY_ERROR_DATETYPE;
+		}
+		break;
+	}
+	default:
+		break;
+	}
+
+
+	return TRUE;
 }

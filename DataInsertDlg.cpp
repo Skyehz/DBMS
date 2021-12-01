@@ -3,7 +3,7 @@
 #include "myDBMS1.h"
 #include "DataInsertDlg.h"
 #include "afxdialogex.h"
-
+#include "ParseSQL.h"
 
 // DataInsertDlg 对话框
 
@@ -88,13 +88,13 @@ BOOL DataInsertDlg::OnInitDialog()
 	{
 		m_listCtl.InsertItem(i, m_vFieldList[i].GetName());
 		m_listCtl.SetItemText(i, 1, FileOp::GetTypeCString(m_vFieldList[i].GetType()));
-		/*m_listCtl.SetItemText(i, 2, FileOp::GetIcon(m_vFieldList[i].GetIsPK()));
-		m_listCtl.SetItemText(i, 3, FileOp::GetIcon(m_vFieldList[i].GetIsNull()));
-		m_listCtl.SetItemText(i, 4, FileOp::GetIcon(m_vFieldList[i].GetIsUnique()));*/
+		m_listCtl.SetItemText(i, 2, FileOp::BoolToString(m_vFieldList[i].IsPrimaryKey()));
+		m_listCtl.SetItemText(i, 3, FileOp::BoolToString(m_vFieldList[i].IsEmpty()));
+		m_listCtl.SetItemText(i, 4, FileOp::BoolToString(m_vFieldList[i].IsUniqueKey()));
 		if (m_iOperType == OPERATE_ADD)
-			m_listCtl.SetItemText(i, 5, _T(""));
+			m_listCtl.SetItemText(i, 5, m_vFieldList[i].GetDefaultValue());
 		else
-			m_listCtl.SetItemText(i, 5, m_rcd[i+1]);
+			m_listCtl.SetItemText(i, 5, m_rcd[i + 1]);
 
 	}
 
@@ -126,19 +126,42 @@ void DataInsertDlg::OnBnClickedOk()
 	}
 	if (isOK)
 	{
-		int code = 0;
 		if (m_iOperType == OPERATE_ADD)
 		{
 			//插入数据
-			code = dataOp.AddRecord(*m_record, m_vFieldList);
-			RefreshRecord(code);
+			//dataOp.AddRecord(*m_record, m_vFieldList);
+			CString record;
+			for (vector<FieldModel>::iterator ite = m_vFieldList.begin(); ite != m_vFieldList.end(); ++ite)
+			{
+				record += m_record->GetValue(ite->GetName())+ CString(",");
+			}
+			record = record.Left(record.GetLength() - 1);
+			CString statement;
+			statement = CString("insert into ") + m_sTableName + CString(" values") + CString("(") + record+ CString(");");
+			ParseSQL parseSql;
+			parseSql.setDB(m_sDBName);
+			parseSql.getSql(statement);
+			
+			RefreshRecord();
 		}
 		else
 		{
 			m_record->SetId(FileOp::StringToInteger(m_rcd[0]));
 			//修改数据
-			code = dataOp.ModifyRecord(*m_record);
-			RefreshRecord(code);
+			//dataOp.ModifyRecord(*m_record);
+			CString record;
+			CString statement;
+			for (vector<FieldModel>::iterator ite = m_vFieldList.begin(); ite != m_vFieldList.end(); ++ite)
+			{
+				record = m_record->GetValue(ite->GetName());
+				statement = CString("update ") + m_sTableName + CString(" set ") + ite->GetName()+CString("=")+record+CString(" where ")+CString("#=")+FileOp::IntegerToString(m_record->GetId()) + CString(";");
+			}
+			record = record.Left(record.GetLength() - 1);
+			
+			ParseSQL parseSql;
+			parseSql.setDB(m_sDBName);
+			parseSql.getSql(statement);
+			RefreshRecord();
 		}
 
 
@@ -192,7 +215,7 @@ void DataInsertDlg::OnEnKillfocusEdit()
 	m_listCtl.SetItemText(m_nRow, m_nColumn, strValue);
 }
 
-void DataInsertDlg::RefreshRecord(int code) {
+void DataInsertDlg::RefreshRecord() {
 	
 	FieldOp fieldop(m_sDBName, m_sTableName);//获取字段
 	vector<FieldModel> fieldList = fieldop.queryFieldsModel(m_sDBName, m_sTableName);

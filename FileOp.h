@@ -6,6 +6,7 @@ class FileOp
 {
 public:
 	static CString GetCurrTime();		//获取当前系统时间
+	static CString setOneline(CString& str);
 	static vector<CString> StrSplit(CString str, CString split);
 	static CString IntegerToString(int number);
 	static int StringToInteger(CString cstring);

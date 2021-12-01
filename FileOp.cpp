@@ -11,6 +11,11 @@ CString FileOp::GetCurrTime()
 	return t.Format("%Y-%m-%d %H:%M:%S");
 }
 
+CString FileOp::setOneline(CString& str) {
+	str.Replace(_T("\r\n"), _T(" "));
+	return str;
+}
+
 //·Ö¸î×Ö·û´®
 vector<CString> FileOp::StrSplit(CString str, CString split)
 {

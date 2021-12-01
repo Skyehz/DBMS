@@ -8,6 +8,8 @@
 #include "resource.h"
 #include "MainFrm.h"
 #include "ParseSQL.h"
+#include "FileOp.h"
+#include <map>
 
 // SqlDialog 对话框
 
@@ -46,12 +48,35 @@ void SqlDialog::OnBnClickedOk()
 	GetDlgItem(IDC_EDIT1)->GetWindowText(cstr);
 	ParseSQL parse;
 	parse.setDB(dbName);
-	parse.getSql(cstr);
+	cstr = FileOp::setOneline(cstr);
+	vector<CString> sqlstr = FileOp::StrSplit(cstr, CString("; "));
+	for (int i = 0; i < sqlstr.size(); i++) {
+		sqlstr[i].MakeLower();
+		if (sqlstr[i].Find(CString("select"))==0) {
+			vector<CDataModel> res = parse.getSql(cstr);
+			vector<FieldModel> fields;
+			if (!res.empty()) {
+
+				map<CString, CString> m = res[0].GetValues();
+				for (map<CString, CString>::iterator ite = m.begin(); ite != m.end(); ++ite) {
+					FieldModel model;
+					model.SetName(ite->first);
+					fields.push_back(model);
+				}
+
+				CMainFrame* pMainWnd = (CMainFrame*)AfxGetMainWnd();
+				pMainWnd->m_pTableView->ClearTable();
+				//FieldOp fieldop(GetSelectedDBName(), GetSelectedTBName());
+				pMainWnd->m_pTableView->DisplayRecords(res, fields);
+			}
+		}
+		else {
+			parse.getSql(sqlstr[i]);
+		}
+	}
 
 
-	CMainFrame* pMainWnd = (CMainFrame*)AfxGetMainWnd();
-	pMainWnd->m_pTableView->ClearTable();
-	//FieldOp fieldop(GetSelectedDBName(), GetSelectedTBName());
-	//pMainWnd->m_pTableView->DisplayFields(fieldop.queryFieldsModel(GetSelectedDBName(), GetSelectedTBName()));
+
+	
 
 }

@@ -23,6 +23,7 @@ public:
 	bool ModifyFieldSQL(vector<CString> condition, int type);	//在sql中调用的修改字段
 
 	bool dropField(CString& dbName, CString& tableName, CString& fieldName);
+	int DeleteField(CString& fieldName);
 
 	CString queryField(CString& dbName, CString& tableName, CString& fieldName);//查询表内字段信息，返回字符串
 	FieldModel queryFieldModel(CString& dbName, CString& tableName, CString& fieldName);

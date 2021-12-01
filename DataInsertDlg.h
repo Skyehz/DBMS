@@ -42,7 +42,7 @@ public:
 	CString m_sTableName;
 	afx_msg void OnNMClickList(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnEnKillfocusEdit();
-	void RefreshRecord(int code);	//刷新表
+	void RefreshRecord();	//刷新表
 	CEdit m_edit;
 	int m_nRow;
 	int m_nColumn;

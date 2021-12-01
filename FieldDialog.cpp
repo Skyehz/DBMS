@@ -5,6 +5,7 @@
 #include "myDBMS1.h"
 #include "FieldDialog.h"
 #include "DataOp.h"
+#include "ParseSQL.h"
 #include "afxdialogex.h"
 
 
@@ -96,16 +97,34 @@ void FieldDialog::AddField()
 		{
 			if (ite->IsPrimaryKey())
 			{
-
 				MessageBox(L"该表已经有了主键！", L"错误", MB_OK);
 				havePK = true;
 				break;
-
 			}
 		}
 	}
-	else {	//新字段没有要设置主键
-		FieldOp fieldLogic(m_dbName, m_tbName);
+	if(!havePK)
+	{	
+		//添加字段 alter table t2 add col_name type;
+
+		CString statement = CString("alter table ") + m_tbName + CString(" add ") + m_NewField.GetName() +
+			CString(" ") + FileOp::GetTypeCString(m_NewField.GetType()) + CString("(") + FileOp::IntegerToString(m_NewField.GetParam())+ CString(");");
+
+		ParseSQL parseSql;
+		parseSql.setDB(m_dbName);
+		vector<CDataModel> m = parseSql.getSql(statement);
+
+		if (m.empty())
+		{
+			MessageBox(CString("添加成功"), CString("成功"), MB_OK);
+			FieldOp fieldLogic(m_dbName, m_tbName);
+			vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
+			m_pTableView->DisplayFields(fieldList);
+		}
+		else
+			MessageBox(CString("添加失败"), CString("错误"), MB_OK); 
+
+		/*FieldOp fieldLogic(m_dbName, m_tbName);
 		vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
 		if (fieldList.empty()) {
 			m_NewField.SetId(0);
@@ -115,7 +134,6 @@ void FieldDialog::AddField()
 			m_NewField.SetId(curId);
 		}
 
-		//int code = fieldLogic.addField(m_dbName, m_tbName,m_NewField.GetName(), m_NewField.GetOrder(), m_NewField.GetType(),m_NewField.GetParam());
 		int code = fieldLogic.AddOneField(m_NewField);
 		if (code == true)
 		{
@@ -123,7 +141,7 @@ void FieldDialog::AddField()
 			m_pTableView->DisplayFields(fieldList);
 		}
 		else
-			MessageBox(CString("添加错误"), CString("错误"), MB_OK);
+			MessageBox(CString("添加错误"), CString("错误"), MB_OK);*/
 	}
 }
 
@@ -196,6 +214,16 @@ BOOL FieldDialog::OnInitDialog()
 		fieldName = m_fieldEntity.GetName();
 		m_combType.SetCurSel(m_fieldEntity.GetType() - 1);
 		m_iSelType = m_fieldEntity.GetType() - 1;
+
+
+		if (m_primaryKey)
+		{
+			m_uniqueKey = true;
+			m_empty = true;
+			//UpdateData(FALSE);
+			GetDlgItem(IDC_CHECK2)->EnableWindow(FALSE);
+			GetDlgItem(IDC_CHECK3)->EnableWindow(FALSE);
+		}
 	}
 	else {
 		this->SetWindowTextW(L"增加字段");

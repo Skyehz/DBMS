@@ -4,6 +4,7 @@
 #include "ParseSQL.h"
 //MFC判断目录下是否包含指定文件。 含文件名。
 #include <shlwapi.h>
+#include "DataOp.h"
 #pragma comment(lib,"Shlwapi.lib") 
 
 
@@ -21,6 +22,13 @@ FieldOp::~FieldOp(void)
 
 bool FieldOp::AddFields(vector<FieldModel> fields)
 {
+	vector<CString> nowFields = FileOp::ReadAll(tdfPath);
+	if (nowFields.empty()) {
+		FieldModel fm;
+		fm.SetId(0);
+		fm.SetName(CString("#"));
+		AddOneField(fm);
+	}
 	if (!fields.empty())
 	{
 		for (int i = 0; i < fields.size(); i++)
@@ -191,7 +199,7 @@ bool FieldOp::ModifyFieldSQL(vector<CString> condition, int type) {
 				}
 			}
 			//设置默认值
-			else if (type == ALTER_ADD_CONSTRANIT_DEFAULT) {
+			else if (type == ALTER_ADD_CONSTRANIT_DEFAULT && vfield[1] == condition[0]) {
 				FieldModel newField(FileOp::StringToInteger(vfield[0]), //id
 					vfield[1], //name
 					FileOp::StringToInteger(vfield[2]),	//类型
@@ -204,10 +212,6 @@ bool FieldOp::ModifyFieldSQL(vector<CString> condition, int type) {
 					FileOp::StringToInteger(vfield[10]));	//非空
 				return ModifyField(newField, type);
 			}
-
-
-				
-			
 
 		}
 		return flag;
@@ -282,7 +286,7 @@ FieldModel FieldOp::queryFieldModel(CString& dbName, CString& tableName, CString
 	{
 		return FieldModel();
 	}
-	CString filePath = CString("./dbms_root/data") + CString("/") + dbName + CString("/") + tableName + CString("/") + tableName + CString(".tdf");
+	CString filePath = CString("./dbms_root/data") + CString("/") + dbName + CString("/") + tableName + CString(".tdf");
 	vector<CString>	fields = FileOp::ReadAll(filePath);
 
 	FieldModel fieldModel(fields.at(number));
@@ -291,7 +295,7 @@ FieldModel FieldOp::queryFieldModel(CString& dbName, CString& tableName, CString
 
 vector<CString> FieldOp::queryFields(CString& dbName, CString& tableName)
 {
-	CString filePath = CString("./dbms_root/data") + CString("/") + dbName + CString("/") + tableName + CString("/") + tableName + CString(".tdf");
+	CString filePath = CString("./dbms_root/data") + CString("/") + dbName + CString("/") + tableName + CString(".tdf");
 	vector<CString>	fields = FileOp::ReadAll(filePath);
 	vector<CString> nameFields;
 	for (int i = 0; i < fields.size(); i++)
@@ -353,4 +357,28 @@ int  FieldOp::IsFiledExist(CString& dbName, CString& tableName, CString& fieldNa
 		}
 	}
 	return -1;
+}
+int FieldOp::DeleteField(CString& fieldName)
+{
+	vector<FieldModel> list = FieldOp::queryFieldsModel(dbName, tbName);
+	int index = 0;
+
+	for (int i = 0; i < list.size(); i++)
+	{
+		if (list[i].GetName() == fieldName)
+		{
+			index = i+1;
+			break;
+		}
+	}
+
+	vector<CString> flist = FileOp::ReadAll(trdPath);
+	if (!flist.empty()) {
+		if (!CDataOp::DeleteFieldRecord(trdPath, index))
+			return FALSE;
+	}
+	if (!FieldOp::dropField(dbName, tbName, fieldName))
+		return FALSE;
+	else
+		return TRUE;
 }
