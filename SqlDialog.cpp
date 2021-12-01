@@ -6,6 +6,7 @@
 #include "SqlDialog.h"
 #include "afxdialogex.h"
 #include "resource.h"
+#include "MainFrm.h"
 #include "ParseSQL.h"
 
 // SqlDialog 对话框
@@ -46,5 +47,11 @@ void SqlDialog::OnBnClickedOk()
 	ParseSQL parse;
 	parse.setDB(dbName);
 	parse.getSql(cstr);
+
+
+	CMainFrame* pMainWnd = (CMainFrame*)AfxGetMainWnd();
+	pMainWnd->m_pTableView->ClearTable();
+	//FieldOp fieldop(GetSelectedDBName(), GetSelectedTBName());
+	//pMainWnd->m_pTableView->DisplayFields(fieldop.queryFieldsModel(GetSelectedDBName(), GetSelectedTBName()));
 
 }

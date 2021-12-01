@@ -90,6 +90,12 @@
     <ClInclude Include="ConstraintOp.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="LogModel.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LogOp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="myDBMS1.cpp">
@@ -156,6 +162,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ConstraintOp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LogModel.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LogOp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

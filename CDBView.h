@@ -57,5 +57,7 @@ public:
 	afx_msg void OnbtnDTable();
 	afx_msg void OnQueryFields();
 	afx_msg void OnQueryTable();
+	afx_msg void OnBackup();
+	afx_msg void OnRestore();
 };
 

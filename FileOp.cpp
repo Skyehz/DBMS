@@ -21,7 +21,7 @@ vector<CString> FileOp::StrSplit(CString str, CString split)
 	{
 		index = str.Find(split);
 		res.push_back(str.Left(index));
-		str.Delete(0, index + 1);
+		str.Delete(0, index + split.GetLength());
 	}
 	return res;
 }

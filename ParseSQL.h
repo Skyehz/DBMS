@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include<map>
+#include"DataModel.h"
 using namespace std;
 
 #define ALTER_CHANGE_FIELDNAME 1
@@ -16,7 +18,22 @@ public:
 	void setDB(CString& dbmName);
 	void getSql(CString& statement);
 	CString dbmName;
-	bool alterOp(vector<CString> init);		//alter操作
+	bool alterOp(vector<CString> init);
+	vector<CString> getDistinctList(vector<CDataModel>& whereRes, CString& field);
+	vector<vector<CDataModel>> getGroupByRes(vector<CDataModel>& whereRes, CString& field);
+	vector<CDataModel> getHavingRes(vector<vector<CDataModel>>& groupRes, vector<CDataModel>& res, CString& gField, CString& condition);
+	vector<CDataModel> getOrderBy(vector<CDataModel>& list, CString& field, int type);
+	vector<CString> getSumRes(vector<CString> &distinctList, vector<vector<CDataModel>>& groupRes, CString& field);
+	vector<CString> getCountRes(vector<CString>& distinctList, vector<vector<CDataModel>>& groupRes, CString& field);
+	vector<CString> getAvgRes(vector<CString> &distinctList, vector<vector<CDataModel>>& groupRes, CString& field);
+	//alter操作
+	bool insertOp(vector<CString> init);		//insert操作
+	vector<CDataModel> selectOp(CString str);		//select操作
+	bool deleteOp(vector<CString> init); //delete record 
+	bool updateOp(vector<CString> init);
+	bool altOp(CString& str, CDataModel& record);
+	vector<CDataModel> whereOp(CString& str, vector<CDataModel> recordlist);
 };
+
 
 

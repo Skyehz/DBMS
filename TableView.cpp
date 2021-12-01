@@ -28,9 +28,7 @@ BEGIN_MESSAGE_MAP(CTableView, CListView)
 	ON_COMMAND(ID_32780, &CTableView::OnModifyField)
 	//ON_COMMAND(ID_32782, &CTableView::OnDeleteField)
 	ON_NOTIFY_REFLECT(NM_RCLICK, &CTableView::OnNMRClick)
-	/*ON_COMMAND(ID_32783, &CTableView::OnAddRecord)
-	ON_COMMAND(ID_32785, &CTableView::OnDeleteRecord)
-	ON_COMMAND(ID_32784, &CTableView::OnModifyRecord)*/
+
 	ON_COMMAND(ID_32782, &CTableView::OnAddRecord)
 	ON_COMMAND(ID_32783, &CTableView::OnDeleteRecord)
 	ON_COMMAND(ID_32784, &CTableView::OnModifyRecord)

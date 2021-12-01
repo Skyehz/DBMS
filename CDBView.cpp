@@ -10,6 +10,7 @@
 #include "TableOp.h"
 #include "FieldOp.h"
 #include "SqlDialog.h"
+#include"LogOp.h"
 // CDBView
 
 IMPLEMENT_DYNCREATE(CDBView, CTreeView)
@@ -40,6 +41,8 @@ BEGIN_MESSAGE_MAP(CDBView, CTreeView)
 	ON_COMMAND(ID_32777, &CDBView::OnbtnDTable)
 	ON_COMMAND(ID_32781, &CDBView::OnQueryFields)
 	ON_COMMAND(ID_32792, &CDBView::OnQueryTable)
+	ON_COMMAND(ID_32793, &CDBView::OnBackup)
+	ON_COMMAND(ID_32794, &CDBView::OnRestore)
 END_MESSAGE_MAP()
 
 
@@ -440,4 +443,23 @@ void CDBView::OnQueryTable()
 
 	//刷新显示记录表
 	pMainWnd->m_pTableView->DisplayRecords(dataList, fieldList);
+}
+
+
+void CDBView::OnBackup()
+{
+	// TODO: 在此添加命令处理程序代码
+
+	LogOp logOp(GetSelectedDBName());
+	if (!logOp.BackupDB()) {
+		MessageBox(L"备份失败");
+	}
+}
+
+
+void CDBView::OnRestore()
+{
+	// TODO: 在此添加命令处理程序代码
+	LogOp logOp(GetSelectedDBName());
+	logOp.Restore();
 }
