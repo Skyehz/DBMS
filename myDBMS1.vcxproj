@@ -196,6 +196,8 @@
     <ClInclude Include="FieldOp.h" />
     <ClInclude Include="FileOp.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="LogModel.h" />
+    <ClInclude Include="LogOp.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="myDBMS1.h" />
     <ClInclude Include="myDBMS1Doc.h" />
@@ -222,6 +224,8 @@
     <ClCompile Include="FieldModel.cpp" />
     <ClCompile Include="FieldOp.cpp" />
     <ClCompile Include="FileOp.cpp" />
+    <ClCompile Include="LogModel.cpp" />
+    <ClCompile Include="LogOp.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="myDBMS1.cpp" />
     <ClCompile Include="myDBMS1Doc.cpp" />

@@ -241,7 +241,7 @@ vector<CDataModel> getHavingRes(vector<vector<CDataModel>> &groupRes,CString &co
 	if (condition.Find(CString("sum(")) != -1) {
 
 	}
-
+	return vector<CDataModel>();
 }
 
 //获得排序后的结果 (正序或倒序)
