@@ -89,17 +89,134 @@ int CDBOp::CreateDatabase(CString& dbName) {
 	return 0;
 }
 
+//修改dbms.sys里的数据库信息，更新为新的数据库名称
+bool ModifySysfileDB(CString& oldName, CString& newName, CString& sysFileName)
+{
+	vector<CString> strList = FileOp::ReadAll(sysFileName);
+	if (!strList.empty())
+	{
+		for (vector<CString>::iterator ite = strList.begin() + 1; ite != strList.end(); ++ite)
+		{
+			vector<CString> tmpList = FileOp::StrSplit(*ite, L"#");
+			if (tmpList[1] == oldName)
+			{
+				tmpList[1] = newName;
+				*ite = tmpList[0] + CString("#") +
+					tmpList[1] + CString("#") +
+					tmpList[2] + CString("#") +
+					tmpList[3] + CString("#") +
+					tmpList[4];
+				break;
+			}
+		}
+	}
+	return FileOp::WriteRecord(sysFileName, strList);
+}
+
+//修改.db文件名称
+bool CDBOp::ModifyDirName(CString& oldName, CString& newName)
+{
+	CString oldDBFileName = CString("./dbms_root/") + oldName + ".db";
+	CString newDBFileName = CString("./dbms_root/") + newName + ".db";
+	vector<CString> strList = FileOp::ReadAll(oldDBFileName);
+	if (!strList.empty())
+	{
+		//vector<CString>::iterator ite=strList.begin();
+		CString first = strList[0];
+		vector<CString> temp = FileOp::StrSplit(first, CString("#"));
+		temp[1] = newName;
+		first = temp[0] + CString("#") + temp[1];
+		strList[0] = first;
+	}
+	if (FileOp::WriteRecord(oldDBFileName, strList) && FileOp::ModifyFileName(oldDBFileName, newDBFileName) )
+		return true;
+	else
+		return false;
+
+}
+
+int CDBOp::ModifyDBName(CString& oldDBName, CString& newDBName) {
+	//获取当前数据库列表
+	vector<CDBModel> dblist = GetDatabaseList();
+	bool bExist = false;
+	for (vector<CDBModel>::iterator ite = dblist.begin(); ite != dblist.end(); ++ite)
+	{
+		if (ite->GetName() == newDBName)
+		{
+			bExist = true;
+			break;
+		}
+	}
+
+	if (bExist)	//新数据库名已经存在，不能修改
+		return false;
+	else        //新数据库名不存在，可以修改
+	{
+		CString oldNametb = CString("./dbms_root/data/") + oldDBName + CString("/") + oldDBName + ".tb";
+		CString newNametb = CString("./dbms_root/data/") + oldDBName + CString("/") + newDBName + ".tb";
+		CString oldNamelog = CString("./dbms_root/data/") + oldDBName + CString("/") + oldDBName + ".log";
+		CString newNamelog = CString("./dbms_root/data/") + oldDBName + CString("/") + newDBName + ".log";
+
+		if (!ModifySysfileDB(oldDBName, newDBName, this->sysPath)	 //修改dbms.sys中的记录
+			||!ModifyDirName(oldDBName, newDBName)				//修改.db文件名
+			||!FileOp::ModifyFileName(oldNametb, newNametb)		//修改.tb文件名
+			||!FileOp::ModifyFileName(oldNamelog, newNamelog)	//修改.log文件名
+			||MoveFile(CString("./dbms_root/data/") + oldDBName, CString("./dbms_root/data/") + newDBName) == 0)//重命名文件夹
+			return false;
+		else
+		{
+			/*CSystemLogic sysLogic;
+			sysLogic.WriteLog(CString("modified database name,") + oldDBName + CString("->") + newDBName);*/
+			return true;
+		}
+
+
+	}
+}
+
+
+int DeleteDBRecord(CString& sysFileName, CString& dbname)
+{
+	vector<CString> list = FileOp::ReadAll(sysFileName);
+	if (list.empty())
+		return false;
+	else
+	{
+		vector<CString>::iterator ite = list.begin();
+		++ite;
+		for (; ite != list.end(); ++ite)
+		{
+			vector<CString> temp = FileOp::StrSplit(*ite, CString("#"));
+			//如果找到指定的记录
+			if (temp[1] == dbname)
+			{
+				list.erase(ite);
+				break;
+			}
+		}
+		if (FileOp::WriteRecord(sysFileName, list))
+			return true;
+		else
+			return false;
+	}
+
+}
+
+
+
 //删除指定的数据库
 int CDBOp::DropDatabase(CString& dbname)
 {
-	/*if (!CDBDAO::DeleteDBRecord(this->sysPath, dbname) || !CDBDAO::DeleteDBFile(dbname))
-		return DELETE_ERROR;
+	if (!DeleteDBRecord(this->sysPath, dbname) || !DeleteFile(CString("./dbms_root/") + dbname + CString(".db")) || !FileOp::DeleteFolder(CString("./dbms_root/data/") + dbname))
+	{
+		return false;
+	}
 	else
 	{
-		CSystemLogic sysLogic;
-		sysLogic.WriteLog(CString("deleted database:") + dbname);
-		return YES;
-	}*/
+		/*CSystemLogic sysLogic;
+		sysLogic.WriteLog(CString("deleted database:") + dbname);*/
+		return true;
+	}
 	return 0;
 }
 

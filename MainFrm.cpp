@@ -6,8 +6,7 @@
 #include "framework.h"
 #include "myDBMS1.h"
 //#include "stdafx.h"
-#include "resource.h"
-
+#include "Resource.h"
 #include "MainFrm.h"
 #include "DBOp.h"
 
@@ -24,6 +23,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_CREATE()
 	ON_COMMAND(ID_32771, &CMainFrame::OnCrtDB)
 	ON_COMMAND(ID_32774, &CMainFrame::OnDropDB)
+	ON_COMMAND(ID_32772, &CMainFrame::OnOpenDB)
+	//ON_COMMAND(ID_32791, &CMainFrame::OnInputSql)
+	ON_COMMAND(ID_32773, &CMainFrame::OnRenameDB)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -121,18 +123,27 @@ void CMainFrame::OnCrtDB()
 {
 	// TODO: 在此添加命令处理程序代码
 	m_pDBView->OnCrtDB();
-	
-	
-	//CDBOp* dbop = new CDBOp();
-	//string str = "db1";		//创建数据库db1
-	//CString cstr;
-	//cstr = str.c_str();
-	//dbop->CreateDatabase(cstr);
 }
 
 
 void CMainFrame::OnDropDB()
 {
 	// TODO: 在此添加命令处理程序代码
+	m_pDBView->OnDropDB();
+}
 
+
+
+void CMainFrame::OnOpenDB()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_pDBView->OnOpenDB();
+}
+
+
+
+void CMainFrame::OnRenameDB()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_pDBView->OnRenameDB();
 }
