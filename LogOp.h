@@ -1,17 +1,15 @@
 #pragma once
 #include"LogModel.h"
+#include"ParseSQL.h"
 #include"vector"
 using namespace std;
 class LogOp
 {
-	//将所有文件备份
-	//将sql语句存入日志
-	//通过备份文件和sql语句进行恢复
-
-	//需要一个LogModel 日记id（方便）回滚，存入日志时间，sql操作
-
+	
+	//备份当前数据库的内容
 private:
 	CString logFilePath;
+	CString dbPath;
 	CString dbName;
 public:
 	LogOp(CString dbName);
@@ -28,5 +26,8 @@ public:
 	vector<LogModel> ReadLogs();
 
 	bool IsLogExist(CString& dbName);
+
+
+	void CopyDirectory(CString source, CString target); //将指定路径文件夹复制到目标路径文件夹
 };
 

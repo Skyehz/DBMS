@@ -13,11 +13,11 @@ public:
 	CString toString();
 
 	int GetId() { return id; };
-	CString GetLog() { return sqlStr; };
+	CString GetSql() { return sqlStr; };
 	CString GetMtime() { return mtime; };
 
 	void SetId(int m_id) { id = m_id; };
-	void SetLog(CString m_log) { sqlStr = m_log; };
+	void SetSql(CString m_log) { sqlStr = m_log; };
 	void SetMtime(CString m_mtime) { mtime = m_mtime; };
 };
 

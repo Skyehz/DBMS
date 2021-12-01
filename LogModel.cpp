@@ -25,6 +25,6 @@ CString LogModel::toString()
 {
 	CString Cid;
 	Cid.Format(_T("%d"), this->GetId());
-	CString str = Cid + CString(" ") + this->GetLog() + CString(" ") + this->GetMtime();
+	CString str = Cid + CString(" ") + this->GetSql() + CString(" ") + this->GetMtime();
 	return str;
 }
