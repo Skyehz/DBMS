@@ -19,6 +19,12 @@ LogOp::~LogOp(void)
 
 bool LogOp::BackupDB()
 {	
+	//清除log文件
+	DeleteFile(this->logFilePath);//MFC框架中可直接调用此函数
+	CFile file(this->logFilePath, CFile::modeCreate);
+
+
+
 	//把整个数据库进行复制
 	CString AimFilePath = CString("./backUp/data/") + dbName;
 	CString dbPath = CString("./dbms_root/data/") + dbName;

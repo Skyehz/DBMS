@@ -133,7 +133,8 @@ void ParseSQL::getSql(CString& statement) {
 
 	LogOp logOp(this->dbmName);
 	LogModel logModel(statement);
-	logOp.WriteOneLog(logModel);
+	if (!logOp.WriteOneLog(logModel))
+		MessageBox(NULL, L"写入日志失败", CString("提示"), MB_OK);
 	return;
 }
 
