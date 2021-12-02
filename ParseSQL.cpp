@@ -173,9 +173,10 @@ int ParseSQL::getSql(CString& statement) {
 		updateOp(init);
 	}
 
-	/*LogOp logOp(this->dbmName);
-	LogModel logModel(statement);
-	logOp.WriteOneLog(logModel);*/
+	LogOp logOp(this->dbmName);
+	LogModel logModel(1,statement);
+	//MessageBox(NULL, statement, CString("ÌבÊ¾"), MB_OK);
+	logOp.WriteOneLog(logModel);
 	return true;
 }
 

@@ -9,7 +9,7 @@ public:
 	CString mtime;//日志存入时间
 	
 	LogModel(int id=1,CString sqlStr=L"null");
-	LogModel(CString str);
+	//LogModel(CString str);
 	CString toString();
 
 	int GetId() { return id; };

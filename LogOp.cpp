@@ -72,16 +72,16 @@ bool LogOp::Restore()
 	if (!RestoreDB())
 		return false;
 
-	////使用sql类执行log命令
-	//vector<LogModel> logModels = ReadLogs();
-	//ParseSQL parseSql;
-	//parseSql.setDB(dbName);
-	//for (int  i = 0; i < logModels.size(); i++)
-	//{
-	//	LogModel logModel = logModels.at(i);
-	//	CString sql = logModel.GetSql();
-	//	parseSql.getSql(sql);
-	//}
+	//使用sql类执行log命令
+	vector<LogModel> logModels = ReadLogs();
+	ParseSQL parseSql;
+	parseSql.setDB(dbName);
+	for (int  i = 0; i < logModels.size(); i++)
+	{
+		LogModel logModel = logModels.at(i);
+		CString sql = logModel.GetSql();
+				parseSql.getSql(sql);
+	}
 	return true;
 }
 
@@ -111,7 +111,8 @@ vector<LogModel> LogOp::ReadLogs()
 	for (int i = 0; i < logs.size(); i++)
 	{
 		CString log = logs.at(i);
-		LogModel logModel(log);
+	/*	MessageBox(NULL, log, CString("提示"), MB_OK);*/
+		LogModel logModel(1,log);
 		logModels.push_back(logModel);
 	}
 	return logModels;
