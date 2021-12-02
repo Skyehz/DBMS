@@ -18,7 +18,7 @@ void ParseSQL::setDB(CString& dbmName) {
 }
 
 
-vector<CDataModel> ParseSQL::getSql(CString& statement) {
+int ParseSQL::getSql(CString& statement) {
 	statement.MakeLower();
 	CString str = FileOp::semicolon(statement);
 	vector<CString> init = FileOp::StrSplit(str, CString(" "));
@@ -42,55 +42,86 @@ vector<CDataModel> ParseSQL::getSql(CString& statement) {
 			//创建表
 			TableOp tbop;
 			tbop.CreateTable(name, this->dbmName);
+			
 			//获取字段类型
 			vector<CString>field = FileOp::StrSplit(fields, CString(","));
 			vector<FieldModel> fieldlist;
 			int n = field.size();
+			
 
 			for (int i = 0; i < n; i++) {
-				FieldModel fd;
-				fd.SetId(i+1);	//id从1开始设置
-				CString len = FileOp::getbrakets(field[i]);
-				fd.SetParam(_ttoi(len));
-				CString fnt = FileOp::getbeforebrakets(field[i]);
-				vector<CString>temp = FileOp::StrSplit(fnt, CString(" "));
-				fd.SetName(temp[0]);
-				int type = FileOp::GetTypeInt(temp[1]);
-				fd.SetType(type);
-				for (int i = 0; i < temp.size(); i++) {
-					if (temp[i] == CString("primary") && temp[i + 1] == CString("key")) {
-						fd.SetIntegrities(1);
-						fd.SetPrimaryKey(1);
+				if (field[i].Find(CString("primary key")) == 0) {
+					CString fieldname = FileOp::getbrakets(field[i]);
+					FieldOp fop(this->dbmName, name);
+					for (int j = 0; j < fieldlist.size(); j++) {
+						if (fieldlist[j].GetName() == fieldname) {
+							fieldlist[j].SetPrimaryKey(1);
+							fieldlist[j].SetEmpty(1);
+							fieldlist[j].SetUniqueKey(1);
+							fieldlist[j].SetIntegrities(1);
+						}
 					}
-					if (temp[i] == CString("unique")) {
-						fd.SetIntegrities(1);
-						fd.SetUniqueKey(1);
-					}
-					if (temp[i] == CString("not") && temp[i + 1] == CString("null")) {
-						fd.SetIntegrities(1);
-						fd.SetEmpty(1);
-					}
-					if (temp[i] == CString("comment")) {
-						fd.SetIntegrities(1);
-						fd.SetNotes(temp[i + 1].Mid(1, temp[i + 1].GetLength() - 2));
-					}
-					if (temp[i] == CString("default")) {
-						fd.SetIntegrities(1);
-						fd.SetNotes(temp[i + 1].Mid(1, temp[i + 1].GetLength() - 2));
-					}
+					
 				}
+				else if (field[i].Find(CString("unique")) == 0) {
+					CString fieldname = FileOp::getbrakets(field[i]);
+					FieldOp fop(this->dbmName, name);
+					for (int j = 0; j < fieldlist.size(); j++) {
+						if (fieldlist[j].GetName() == fieldname) {
+							fieldlist[j].SetUniqueKey(1);
+							fieldlist[j].SetIntegrities(1);
+						}
+					}
+					
+				}
+				else {
+					FieldModel fd;
+					fd.SetId(i);	//id从1开始设置
+					CString len = FileOp::getbrakets(field[i]);
+					fd.SetParam(_ttoi(len));
+					CString fnt = FileOp::getbeforebrakets(field[i]);
+					vector<CString>temp = FileOp::StrSplit(fnt, CString(" "));
+					fd.SetName(temp[0]);
+					int type = FileOp::GetTypeInt(temp[1]);
+					fd.SetType(type);
+					for (int i = 0; i < temp.size(); i++) {
+						if (temp[i] == CString("primary") && temp[i + 1] == CString("key")) {
+							fd.SetIntegrities(1);
+							fd.SetEmpty(1);
+							fd.SetUniqueKey(1);
+							fd.SetPrimaryKey(1);
+						}
+						if (temp[i] == CString("unique")) {
+							fd.SetIntegrities(1);
+							fd.SetUniqueKey(1);
+						}
+						if (temp[i] == CString("not") && temp[i + 1] == CString("null")) {
+							fd.SetIntegrities(1);
+							fd.SetEmpty(1);
+						}
+						if (temp[i] == CString("comment")) {
+							fd.SetIntegrities(1);
+							fd.SetNotes(temp[i + 1].Mid(1, temp[i + 1].GetLength() - 2));
+						}
+						if (temp[i] == CString("default")) {
+							fd.SetIntegrities(1);
+							fd.SetNotes(temp[i + 1].Mid(1, temp[i + 1].GetLength() - 2));
+						}
+					}
 
-				fieldlist.push_back(fd);
+					fieldlist.push_back(fd);
+				}
 			}
 
 			FieldOp fieldop(this->dbmName, name);
+
 			fieldop.AddFields(fieldlist);
 
 		}
 		else
 		{
 			MessageBox(NULL, CString("创建失败"), CString("提示"), MB_OK);
-			return res;
+			//return res;
 		}
 	}
 	//删除库或表
@@ -100,16 +131,16 @@ vector<CDataModel> ParseSQL::getSql(CString& statement) {
 			CString name = init[2];
 			CDBOp dbOp;
 			int code = dbOp.DropDatabase(name);
-			return res;
+			//return res;
 		}
 		else if (type == CString("table")) {
 			CString name = init[2];
 			TableOp tbOp;
 			int code = tbOp.DropTable(name, this->dbmName);
-			return res;
+			//return res;
 		}
-		else
-			return res;
+		//else
+			//return res;
 	}
 	//重命名表
 	else if (init[0] == CString("rename")) {
@@ -125,11 +156,6 @@ vector<CDataModel> ParseSQL::getSql(CString& statement) {
 	//插入数据
 	else if (init[0] == CString("insert") && init[1] == CString("into")) {
 		insertOp(init);
-		return res;
-	}
-	//查询数据
-	else if (init[0] == CString("select")) {
-		res = selectOp(str);
 	}
 	//修改表
 	else if (init[0] == CString("alter")) {
@@ -138,16 +164,28 @@ vector<CDataModel> ParseSQL::getSql(CString& statement) {
 			alterOp(init);
 		}
 	}
-
+	//删除记录
 	else if (init[0] == CString("delete") && init[1] == CString("from")) {
 		deleteOp(init);
 	}
+	//更新记录
 	else if (init[0] == CString("update")) {
 		updateOp(init);
 	}
+
 	/*LogOp logOp(this->dbmName);
 	LogModel logModel(statement);
 	logOp.WriteOneLog(logModel);*/
+	return true;
+}
+
+vector<CDataModel> ParseSQL::getSelectSql(CString &statement) {
+	statement.MakeLower();
+	CString str = FileOp::semicolon(statement);
+	vector<CString> init = FileOp::StrSplit(str, CString(" "));
+	vector<CDataModel> res;
+	
+	res = selectOp(str);
 	return res;
 }
 
@@ -159,13 +197,6 @@ bool ParseSQL::alterOp(vector<CString> init) {
 		FieldOp fieldop(dbmName, tbname);
 		vector<FieldModel> fieldList = fieldop.queryFieldsModel(dbmName, tbname);
 
-		if (fieldList.empty()) {
-			FieldModel fm;
-			fm.SetId(0);
-			fm.SetName(CString("@"));
-			fieldop.AddOneField(fm);
-		}
-
 		int curId = fieldList.back().GetId() + 1;
 		FieldModel m_NewField(curId, init[4], FileOp::GetTypeInt(FileOp::getbeforebrakets(init[5])), FileOp::StringToInteger(FileOp::getbrakets(init[5])), 0);
 		return fieldop.AddOneField(m_NewField);
@@ -175,12 +206,11 @@ bool ParseSQL::alterOp(vector<CString> init) {
 	else if (init[3] == CString("drop") && init[4] == CString("column")) {
 		FieldOp fieldop(dbmName, tbname);
 		vector<FieldModel> fieldList = fieldop.queryFieldsModel(dbmName, tbname);
-		int curId = fieldList.back().GetId() + 1;
-		bool dropF = fieldop.dropField(dbmName, tbname, init[5]);//删除字段
+		bool dropF = fieldop.DeleteField(init[5]);//删除字段
 		//删除字段对应的记录
-		bool dropR=true;
+		//bool dropR=true;
 
-		return dropR && dropF;
+		return /*dropR && */dropF;
 	}
 
 	//修改字段名 ALTER TABLE 表名 CHANGE 旧字段名 新字段名 字段类型(长度);
@@ -302,6 +332,64 @@ vector<vector<CDataModel>> ParseSQL::getGroupByRes(vector<CDataModel> &whereRes,
 		return groupbyRes;
 }
 
+
+//select的列中有聚组函数，则将所需要的聚组函数进行运算加到原表之后
+vector<CDataModel> ParseSQL::getAllGroupRes(vector<vector<CDataModel>>& groupRes, vector<CDataModel>& res, CString& gField, vector<CString>& condition) {
+	vector<CDataModel> allRes;
+	vector<CString> distinctList = getDistinctList(res, gField);
+	int n = distinctList.size();
+	//map<CString, CString> m;
+	for (int i = 0; i < n; i++) {
+		map<CString, CString> m;
+		CDataModel new_model(i);
+		new_model.SetValue(CString("@"), FileOp::IntegerToString(i));
+		m.insert(pair<CString, CString>(gField, distinctList[i]));
+		new_model.SetValues(m);
+		allRes.push_back(new_model);
+	}
+
+	
+	//m.insert(pair<CString, CString>(gField, tmp[0]));
+	for (int i = 0; i < condition.size(); i++) {
+		if (condition[i].Find(CString("sum(")) != -1) {
+			CString groupByfield = FileOp::getbrakets(condition[i]);
+			vector<CString> sumRes = getSumRes(distinctList, groupRes, groupByfield);
+			for (int k = 0; k < n; k++) {
+				vector<CString> tmp = FileOp::StrSplit(sumRes[k], CString("#"));
+				map<CString, CString> m = allRes[k].GetValues();
+				m.insert(pair<CString, CString>(CString("sum(") + groupByfield + CString(")"), tmp[1]));//在原来map的基础上加一列
+				allRes[k].SetValues(m);
+			}
+		}
+		else if (condition[i].Find(CString("avg(")) != -1) {
+			CString groupByfield = FileOp::getbrakets(condition[i]);
+			vector<CString> avgRes = getAvgRes(distinctList, groupRes, groupByfield);
+			for (int k = 0; k < n; k++) {
+				vector<CString> tmp = FileOp::StrSplit(avgRes[k], CString("#"));
+				//m.insert(pair<CString, CString>(gField, tmp[0]));
+				map<CString, CString> m = allRes[k].GetValues();
+				m.insert(pair<CString, CString>(CString("avg(") + groupByfield + CString(")"), tmp[1]));
+				allRes[k].SetValues(m);//在原来map的基础上加一列
+			}
+		}
+		else if (condition[i].Find(CString("count(")) != -1) {
+			CString groupByfield = FileOp::getbrakets(condition[i]);
+			vector<CString> countRes = getCountRes(distinctList, groupRes, groupByfield);
+			for (int k = 0; k < n; k++) {
+				vector<CString> tmp = FileOp::StrSplit(countRes[k], CString("#"));
+				//m.insert(pair<CString, CString>(gField, tmp[0]));
+				map<CString, CString> m = allRes[k].GetValues();
+				m.insert(pair<CString, CString>(CString("count(") + groupByfield + CString(")"), tmp[1]));
+				allRes[k].SetValues(m);//在原来map的基础上加一列
+			}
+		}
+
+
+	}
+
+	return allRes;
+}
+
 //筛选having条件之后的结果
 vector<CDataModel> ParseSQL::getHavingRes(vector<vector<CDataModel>> &groupRes, vector<CDataModel> &res, CString& gField,CString &condition) {
 	vector<CString> distinctList = getDistinctList(res, gField);
@@ -330,7 +418,7 @@ vector<CDataModel> ParseSQL::getHavingRes(vector<vector<CDataModel>> &groupRes, 
 					vector<CString> tmp = FileOp::StrSplit(sumRes[k], CString("#"));
 					map<CString, CString> m = havingRes[k].GetValues();
 					m.insert(pair<CString, CString>(gField, tmp[0]));
-					m.insert(pair<CString, CString>(CString("sum"), tmp[1]));
+					m.insert(pair<CString, CString>(CString("sum(")+field+CString(")"), tmp[1]));
 					havingRes[k].SetValues(m);//在原来map的基础上加一列
 				}
 
@@ -343,7 +431,7 @@ vector<CDataModel> ParseSQL::getHavingRes(vector<vector<CDataModel>> &groupRes, 
 					vector<CString> tmp = FileOp::StrSplit(avgRes[k], CString("#"));
 					map<CString, CString> m = havingRes[k].GetValues();
 					m.insert(pair<CString, CString>(gField, tmp[0]));
-					m.insert(pair<CString, CString>(CString("avg"), tmp[1]));
+					m.insert(pair<CString, CString>(CString("avg") + field + CString(")"), tmp[1]));
 					havingRes[k].SetValues(m);//在原来map的基础上加一列
 				}
 
@@ -356,7 +444,7 @@ vector<CDataModel> ParseSQL::getHavingRes(vector<vector<CDataModel>> &groupRes, 
 					vector<CString> tmp = FileOp::StrSplit(countRes[k], CString("#"));
 					map<CString, CString> m = havingRes[k].GetValues();
 					m.insert(pair<CString, CString>(gField, tmp[0]));
-					m.insert(pair<CString, CString>(CString("count"), tmp[1]));
+					m.insert(pair<CString, CString>(CString("count") + field + CString(")"), tmp[1]));
 					havingRes[k].SetValues(m);//在原来map的基础上加一列
 				}
 
@@ -498,11 +586,22 @@ bool ParseSQL::insertOp(vector<CString> init) {
 		FieldOp fp(this->dbmName, name);
 		vector<FieldModel> fieldlist = fp.queryFieldsModel(this->dbmName, name);
 		CDataOp dp(this->dbmName, name);
+
+	
 		for (int i = 0; i < valuelist.size(); i++) {
 			CDataModel data;
-			data.SetId(i);
-			for (int j = 0; j < valuelist[i].size(); j++) {
-				data.SetValue(fieldlist[j].GetName(), valuelist[i][j]);
+
+			vector<CDataModel> dataList = dp.ReadDataList(fieldlist);
+			int curId;
+			if (dataList.empty())
+				curId = 0;
+			else
+				curId = dataList.back().GetId() + 1;
+
+			data.SetId(curId+i);
+			data.SetValue(CString("@"), FileOp::IntegerToString(curId+i));///////////////////////////
+			for (int j = 1; j < fieldlist.size(); j++) {
+				data.SetValue(fieldlist[j].GetName(), valuelist[i][j-1]);
 			}
 			dp.AddRecord(data, fieldlist);
 		}
@@ -529,10 +628,20 @@ bool ParseSQL::insertOp(vector<CString> init) {
 			valuelist.push_back(value);
 		}
 		CDataOp dp(this->dbmName, name);
+		FieldOp fp(this->dbmName, name);
+		vector<CDataModel> dataList = dp.ReadDataList(fp.queryFieldsModel(this->dbmName,name));
+		int curId;
+		if (dataList.empty())
+			curId = 0;
+		else
+			curId = dataList.back().GetId() + 1;
+		
 		for (int i = 0; i < valuelist.size(); i++) {
 			CDataModel data;
-			data.SetId(i);
-			for (int j = 0; j < valuelist[i].size(); j++) {
+			data.SetValue(CString("@"), FileOp::IntegerToString(curId + i));
+
+			data.SetId(i+curId);
+			for (int j = 0; j < fieldmodellist.size(); j++) {
 				data.SetValue(fieldmodellist[j].GetName(), valuelist[i][j]);
 			}
 			dp.AddRecord(data, fieldmodellist);
@@ -552,11 +661,31 @@ vector<CDataModel> ParseSQL::selectOp(CString str) {
 	vector<CDataModel> res;
 
 	vector<vector<CDataModel>> groupRes;
+	vector<CString> groupFunList; //此条语句中所需要的聚组函数
 
 	vector<CString>temp1 = FileOp::StrSplit(str, CString(" order by "));//temp1[1]存放order by后面的内容
 	vector<CString>temp2 = FileOp::StrSplit(temp1[0], CString(" having "));//temp2[1]存放having后面的内容
 	vector<CString>temp3 = FileOp::StrSplit(temp2[0], CString(" group by "));//temp3[1]存放group by后面的内容
 	vector<CString>temp4 = FileOp::StrSplit(temp3[0], CString(" where "));//temp4[1]存放where后面的内容
+	vector<CString>temp5 = FileOp::StrSplit(init[1], CString(",")); //要查询的列名
+
+	//筛选出所有的聚组函数
+	for (int i = 0; i < temp5.size(); i++) {
+		if (temp5[i].Find(CString("sum(")) != -1 || temp5[i].Find(CString("count(")) != -1 || temp5[i].Find(CString("avg(")) != -1) {
+			groupFunList.push_back(temp5[i]);
+		}
+	}
+	if (temp2.size() != 1) { //having之后的聚组函数
+		vector<CString> con1 = FileOp::StrSplit(temp2[1], CString(" or "));
+		for (int i = 0; i < con1.size(); i++) {
+			vector<CString> con2 = FileOp::StrSplit(con1[i], CString(" and "));
+			for (int j = 0; j < con2.size(); j++) {
+				if (con2[j].Find(CString("sum(")) != -1 || con2[j].Find(CString("count(")) != -1 || con2[j].Find(CString("avg(")) != -1) {
+					groupFunList.push_back(FileOp::StrSplit(con2[j], CString(")"))[0] + CString(")"));
+				}
+			}
+		}
+	}
 
 	if (init[2] == CString("from")) {
 		tablelist = FileOp::StrSplit(init[3], CString(","));
@@ -647,6 +776,14 @@ vector<CDataModel> ParseSQL::selectOp(CString str) {
 	}
 	//where
 	if (temp4.size() != 1) {
+		if (temp4.size() == 3) {
+			CString con1 = temp4[1] + " where " + temp4[2];
+			CString con = FileOp::getbrakets(con1);
+			vector<CDataModel> subres = selectOp(con);
+			CString value = subres[0].GetValues().begin()->second;
+			con1.Replace(CString("(") + con + CString(")"), value);
+			res = whereOp(con1, res, fieldmodellist);
+		}
 		res = whereOp(temp4[1], res, fieldmodellist);
 
 	}
@@ -655,16 +792,29 @@ vector<CDataModel> ParseSQL::selectOp(CString str) {
 	if (temp3.size() != 1) {
 		CString groupField = temp3[1];
 		groupRes = getGroupByRes(res, temp3[1]);
+		res = getAllGroupRes(groupRes, res, groupField, groupFunList);
 	}
 	//having
 	if (temp2.size() != 1) {
-
 		//res = getHavingRes(groupRes, res,temp3[1],temp2[1]);
-
+		vector<FieldModel> flist;
+		for (int i = 0; i<groupFunList.size(); i++) {
+			FieldModel field;
+			field.SetName(groupFunList[i]);
+			field.SetType(1);
+			flist.push_back(field);
+		}
+		res = whereOp(temp2[1],res, flist);
 	}
 	//order by
 	if (temp1.size() != 1) {
-
+		if (temp1[1].Find(CString("desc")) != -1) {
+			CString fname = FileOp::StrSplit(temp1[1], CString(" "))[0];
+			res = getOrderBy(res, fname, 1);
+		}
+		else
+			res = getOrderBy(res, temp1[1], 0);
+		
 	}
 	vector<CDataModel> res1;
 
@@ -680,11 +830,9 @@ vector<CDataModel> ParseSQL::selectOp(CString str) {
 				}
 			}
 		}
-		res1.push_back(d);
+		if(d.GetValues().size()!=0)res1.push_back(d);
 
 	}
-
-
 
 	return res1;
 }
@@ -704,13 +852,21 @@ vector<CDataModel> ParseSQL::whereOp(CString& str, vector<CDataModel> recordlist
 			}
 			res1 = res2;
 		}
-		res.insert(res.end(), res1.begin(), res1.end());
+		
+			
+			for (int k = 0; k < res1.size(); k++) {
+				bool re = false;
+				for (int i = 0; i < res.size(); i++) {
+					if (res1[k].toString(res1[k], fieldmodellist) == res[i].toString(res[i], fieldmodellist))re = true;
+				}
+				if (!re || res.size() == 0)res.push_back(res1[k]);
+		}
+		//res.insert(res.end(), res1.begin(), res1.end());
 	}
 
 
 	return res;
 }
-
 
 bool ParseSQL::altOp(CString& str, CDataModel& record, vector<FieldModel>& fieldmodellist, vector<CDataModel>& recordlist) {
 	map<CString, CString>r;
@@ -1285,6 +1441,7 @@ bool ParseSQL::updateOp(vector<CString> init) {
 		}
 		selectStr = selectStr.Left(selectStr.GetLength() - 1);
 		vector<CDataModel> records = selectOp(selectStr);
+		if (value.Find(CString("\"")) == 0)value=value.Mid(1, value.GetLength() - 2);
 		for (int i = 0; i < records.size(); i++) {
 			records[i].SetValue(field, value);
 			dp.ModifyRecord(records[i]);
@@ -1363,10 +1520,14 @@ int ParseSQL::IntegrityVerify(CString& val, FieldModel& field)
 	case 4://varchar*类型
 	{
 
-		if (val.GetLength() > field.GetParam())
-		{
-			return INTEGRITY_TOO_LONG;
+		if (val.Find(CString("\"")) == 0) {
+			if (val.GetLength() - 2 > field.GetParam())
+			{
+				return INTEGRITY_TOO_LONG;
+			}
 		}
+		else
+			return INTEGRITY_ERROR_TYPE;
 		break;
 	}
 	case 5://datatime类型

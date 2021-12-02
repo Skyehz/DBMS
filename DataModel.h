@@ -2,6 +2,7 @@
 #include <vector>
 #define INVALID 0
 #include <map>
+#include "FieldModel.h"
 using namespace std;
 class CDataModel
 {
@@ -18,6 +19,7 @@ public:
 	void SetValues(map<CString, CString> m_map) { m_mValues = m_map; }
 	void SetId(int id) { m_id = id; };
 	void SetValue(CString propety, CString value) { m_mValues[propety] = value; };
+	CString toString(CDataModel datamodel,vector<FieldModel> fieldmodellist);
 };
 
 

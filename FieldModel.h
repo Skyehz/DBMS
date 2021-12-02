@@ -18,7 +18,7 @@ public:
 	int empty;		//是否能为空，默认值能为空0，1为不能为空
 
 	FieldModel(int order = 0, CString name = L"NewField", int type = 1, int param = 0, int integrities = 0,
-		int primaryKey = 0, int uniqueKey = 0, CString defaultValue = L"null", CString notes = L"null", int empty = 0);
+		int primaryKey = 0, int uniqueKey = 0, CString defaultValue = L"null", CString notes = L"", int empty = 0);
 	FieldModel(CString& str);
 	~FieldModel(void);
 

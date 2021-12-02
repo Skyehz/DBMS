@@ -42,7 +42,6 @@ int CDataOp::GetRcdCounter(CString& trdFileName, vector<FieldModel>& fieldList)
 bool CDataOp::WriteAnRecord(CDataModel& record, CString& trdFileName, vector<FieldModel>& fieldList)
 {
 	CString str = FileOp::IntegerToString(record.GetId());
-	//map<CString,CString> values = record.GetValues();
 	for (vector<FieldModel>::iterator ite = fieldList.begin(); ite != fieldList.end(); ++ite)
 	{
 		CString str1 = record.GetValue(ite->GetName());
@@ -55,8 +54,7 @@ bool CDataOp::WriteAnRecord(CDataModel& record, CString& trdFileName, vector<Fie
 }
 int CDataOp::AddRecord(CDataModel& record, vector<FieldModel>& fieldList)
 {
-	int count = GetRcdCounter(this->trdPath, fieldList);
-	record.SetId(count);
+	
 	map<CString, CString> value = record.GetValues();
 	map<CString, CString>::iterator it;
 	bool r = true;
@@ -72,7 +70,7 @@ int CDataOp::AddRecord(CDataModel& record, vector<FieldModel>& fieldList)
 		if (!WriteAnRecord(record, trdPath, fieldList))
 			return ADD_ERROR;
 	}
-	if (SaveRcdCounter(this->trdPath, count))
+	if (SaveRcdCounter(this->trdPath, record.GetId()))
 		return SAVE_COUNTER_ERROR;
 
 	return TRUE;
@@ -234,8 +232,6 @@ int CDataOp::IsUnique(CString& value, CString& fieldName)
 //类型判断
 int CDataOp::IntegrityVerify1(CString& val, FieldModel& field)
 {
-
-
 	//完整性
 	switch (field.GetType())
 	{
@@ -272,11 +268,14 @@ int CDataOp::IntegrityVerify1(CString& val, FieldModel& field)
 	}
 	case 4://varchar*类型
 	{
-
-		if (val.GetLength() > field.GetParam())
-		{
-			return INTEGRITY_TOO_LONG;
+		if (val.Find(CString("\"")) == 0 ) {
+			if (val.GetLength() - 2 > field.GetParam())
+			{
+				return INTEGRITY_TOO_LONG;
+			}
 		}
+		else
+			return INTEGRITY_ERROR_TYPE;
 		break;
 	}
 	case 5://datatime类型

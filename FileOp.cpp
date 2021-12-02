@@ -114,7 +114,7 @@ CString FileOp::semicolon(CString& str) {
 
 	}
 	else {
-		MessageBox(NULL, CString("SQL语句必须以‘；’结尾"), CString("错误"), MB_OK);
+		//MessageBox(NULL, CString("SQL语句必须以‘；’结尾"), CString("错误"), MB_OK);
 		return str;
 	}
 }

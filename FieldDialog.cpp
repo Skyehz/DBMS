@@ -21,7 +21,7 @@ FieldDialog::FieldDialog(CWnd* pParent,CString& dbName,CString& tbName,FieldMode
 	, m_notes(_T(""))
 	, m_uniqueKey(FALSE)
 	, m_defaultValue(_T(""))
-	, m_empty(FALSE)
+	, m_notnull(FALSE)
 {
 	m_pTableView = (CTableView*)pParent;
 }
@@ -40,17 +40,37 @@ void FieldDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT4, m_notes);
 	DDX_Check(pDX, IDC_CHECK2, m_uniqueKey);
 	DDX_Text(pDX, IDC_EDIT3, m_defaultValue);
-	DDX_Check(pDX, IDC_CHECK3, m_empty);
+	DDX_Check(pDX, IDC_CHECK3, m_notnull);
 }
 
 
 BEGIN_MESSAGE_MAP(FieldDialog, CDialogEx)
 	ON_BN_CLICKED(IDOK, &FieldDialog::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_CHECK1, &FieldDialog::OnBnClickedPK)
 END_MESSAGE_MAP()
 
 
 // FieldDialog 消息处理程序
 
+void FieldDialog::OnBnClickedPK()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	//更新值到变量
+	UpdateData(TRUE);
+	if (m_primaryKey)
+	{
+		m_notnull = true;
+		m_uniqueKey = true;
+		UpdateData(FALSE);
+		GetDlgItem(IDC_CHECK2)->EnableWindow(FALSE);
+		GetDlgItem(IDC_CHECK3)->EnableWindow(FALSE);
+	}
+	else
+	{
+		GetDlgItem(IDC_CHECK2)->EnableWindow();
+		GetDlgItem(IDC_CHECK3)->EnableWindow();
+	}
+}
 
 void FieldDialog::OnBnClickedOk()
 {
@@ -70,12 +90,10 @@ void FieldDialog::OnBnClickedOk()
 		m_NewField.SetUniqueKey(m_uniqueKey);
 		m_NewField.SetDefaultValue(m_defaultValue);
 		m_NewField.SetNotes(m_notes);
-		m_NewField.SetEmpty(m_empty);
+		m_NewField.SetEmpty(m_notnull);
 		USES_CONVERSION;
 		m_NewField.SetParam(atoi(T2A(fieldLength)));
-
 	}
-
 
 	if (m_iType==OPERATE_ADD) {
 		this->AddField();
@@ -106,15 +124,39 @@ void FieldDialog::AddField()
 	if(!havePK)
 	{	
 		//添加字段 alter table t2 add col_name type;
-
 		CString statement = CString("alter table ") + m_tbName + CString(" add ") + m_NewField.GetName() +
 			CString(" ") + FileOp::GetTypeCString(m_NewField.GetType()) + CString("(") + FileOp::IntegerToString(m_NewField.GetParam())+ CString(");");
 
 		ParseSQL parseSql;
 		parseSql.setDB(m_dbName);
-		vector<CDataModel> m = parseSql.getSql(statement);
+		int m = parseSql.getSql(statement);
 
-		if (m.empty())
+		if (m_NewField.IsPrimaryKey()) {
+			//默认生成的主键约束名为cstPK@fieldName
+			statement = CString("alter table ") + m_tbName + CString(" add constraint cstPK@") + m_NewField.GetName()
+				+ CString(" primary key(") + m_NewField.GetName() + CString(");");
+			parseSql.getSql(statement);
+		}
+		if (m_NewField.IsUniqueKey()) {
+			//默认生成的唯一约束名为cstUQ@fieldName
+			statement = CString("alter table ") + m_tbName + CString(" add constraint cstUQ@") + m_NewField.GetName()
+				+ CString(" unique(") + m_NewField.GetName() + CString(");");
+			parseSql.getSql(statement);
+		}
+		if (m_NewField.IsEmpty()) {
+			//默认生成的非空约束名为cstNN@fieldName
+			statement = CString("alter table ") + m_tbName + CString(" modify ") + m_NewField.GetName()+ FileOp::GetTypeCString(m_NewField.GetType())
+				+CString("(") +FileOp::IntegerToString( m_NewField.GetParam()) +CString(") not null;");
+			parseSql.getSql(statement);
+		}
+		if (m_NewField.GetDefaultValue() != CString("")) {
+			//默认生成的默认值约束名为cstDEFAULT@fieldName
+			statement = CString("alter table ") + m_tbName + CString(" change column ") + m_NewField.GetName() + FileOp::GetTypeCString(m_NewField.GetType())
+				+ CString("(") + FileOp::IntegerToString(m_NewField.GetParam()) + CString(") default ")+m_NewField.GetDefaultValue();
+			parseSql.getSql(statement);
+		}
+
+		if (m)
 		{
 			MessageBox(CString("添加成功"), CString("成功"), MB_OK);
 			FieldOp fieldLogic(m_dbName, m_tbName);
@@ -123,25 +165,6 @@ void FieldDialog::AddField()
 		}
 		else
 			MessageBox(CString("添加失败"), CString("错误"), MB_OK); 
-
-		/*FieldOp fieldLogic(m_dbName, m_tbName);
-		vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
-		if (fieldList.empty()) {
-			m_NewField.SetId(0);
-		}
-		else {
-			int curId = fieldList.back().GetId() + 1;
-			m_NewField.SetId(curId);
-		}
-
-		int code = fieldLogic.AddOneField(m_NewField);
-		if (code == true)
-		{
-			vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(m_dbName, m_tbName);
-			m_pTableView->DisplayFields(fieldList);
-		}
-		else
-			MessageBox(CString("添加错误"), CString("错误"), MB_OK);*/
 	}
 }
 
@@ -206,6 +229,7 @@ BOOL FieldDialog::OnInitDialog()
 	m_combType.InsertString(3, CString("Varchar"));
 	m_combType.InsertString(4, CString("DateTime"));
 
+	
 
 	if (m_iType == OPERATE_MODIFY)
 	{
@@ -214,16 +238,8 @@ BOOL FieldDialog::OnInitDialog()
 		fieldName = m_fieldEntity.GetName();
 		m_combType.SetCurSel(m_fieldEntity.GetType() - 1);
 		m_iSelType = m_fieldEntity.GetType() - 1;
+		
 
-
-		if (m_primaryKey)
-		{
-			m_uniqueKey = true;
-			m_empty = true;
-			//UpdateData(FALSE);
-			GetDlgItem(IDC_CHECK2)->EnableWindow(FALSE);
-			GetDlgItem(IDC_CHECK3)->EnableWindow(FALSE);
-		}
 	}
 	else {
 		this->SetWindowTextW(L"增加字段");

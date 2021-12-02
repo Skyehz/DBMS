@@ -1,11 +1,16 @@
 #pragma once
+
+#define CST_PK 101
+#define CST_UNIQUE 102
+#define CST_NOTNULL 103
+#define CST_DEFAULT 104
 class ConstraintModel
 {
 public:
 	CString name;	//约束名
 	CString field;	//字段名
 	int type;		//约束类型
-	CString param;	//参数
+	CString param;	//参数 库名+表名+时间
 
 	ConstraintModel(CString m_name, CString m_field, int m_type, CString m_param );
 	ConstraintModel(CString &str);

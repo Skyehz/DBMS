@@ -31,11 +31,13 @@ class ParseSQL
 public:
 
 	void setDB(CString& dbmName);
-	vector<CDataModel> getSql(CString& statement);
+	int getSql(CString& statement);
+	vector<CDataModel> getSelectSql(CString& statement);
 	CString dbmName;
 	bool alterOp(vector<CString> init);
 	vector<CString> getDistinctList(vector<CDataModel>& whereRes, CString& field);
 	vector<vector<CDataModel>> getGroupByRes(vector<CDataModel>& whereRes, CString& field);
+	vector<CDataModel> getAllGroupRes(vector<vector<CDataModel>>& groupRes, vector<CDataModel>& res, CString& gField, vector<CString>& condition);
 	vector<CDataModel> getHavingRes(vector<vector<CDataModel>>& groupRes, vector<CDataModel>& res, CString& gField, CString& condition);
 	vector<CDataModel> getOrderBy(vector<CDataModel>& list, CString& field, int type);
 	vector<CString> getSumRes(vector<CString> &distinctList, vector<vector<CDataModel>>& groupRes, CString& field);

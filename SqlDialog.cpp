@@ -46,37 +46,58 @@ void SqlDialog::OnBnClickedOk()
 	CDialogEx::OnOK();
 	CString cstr;
 	GetDlgItem(IDC_EDIT1)->GetWindowText(cstr);
+
 	ParseSQL parse;
 	parse.setDB(dbName);
 	cstr = FileOp::setOneline(cstr);
 	vector<CString> sqlstr = FileOp::StrSplit(cstr, CString("; "));
+
 	for (int i = 0; i < sqlstr.size(); i++) {
 		sqlstr[i].MakeLower();
-		if (sqlstr[i].Find(CString("select"))==0) {
-			vector<CDataModel> res = parse.getSql(cstr);
+		if (sqlstr[i].Find(CString("select")) != -1) {
+			vector<CDataModel> res = parse.getSelectSql(sqlstr[i]);
+
 			vector<FieldModel> fields;
 			if (!res.empty()) {
-
+				//获取字段名列表
 				map<CString, CString> m = res[0].GetValues();
 				for (map<CString, CString>::iterator ite = m.begin(); ite != m.end(); ++ite) {
 					FieldModel model;
 					model.SetName(ite->first);
 					fields.push_back(model);
 				}
-
+				//显示到界面
 				CMainFrame* pMainWnd = (CMainFrame*)AfxGetMainWnd();
 				pMainWnd->m_pTableView->ClearTable();
-				//FieldOp fieldop(GetSelectedDBName(), GetSelectedTBName());
 				pMainWnd->m_pTableView->DisplayRecords(res, fields);
 			}
 		}
+		else if (sqlstr[i].Find(CString("create table")) != -1) {
+			vector<CString>temp = FileOp::StrSplit(sqlstr[i], CString("("));
+			CString sql;
+			for (int i = 0; i < temp.size(); i++) {
+				if (i == 1)sql += CString("@ int,");
+				sql += temp[i]+CString("(");
+			}
+			sql = sql.Left(sql.GetLength() - 1);
+			parse.getSql(sql);
+		}
 		else {
 			parse.getSql(sqlstr[i]);
+			////显示到界面
+			//vector<FieldModel> fields;
+			//vector<CDataModel> res = parse.getSelectSql(sqlstr[i]);
+			////获取字段名列表
+			//map<CString, CString> m = res[0].GetValues();
+			//for (map<CString, CString>::iterator ite = m.begin(); ite != m.end(); ++ite) {
+			//	FieldModel model;
+			//	model.SetName(ite->first);
+			//	fields.push_back(model);
+			//}
+			//CMainFrame* pMainWnd = (CMainFrame*)AfxGetMainWnd();
+			//pMainWnd->m_pTableView->ClearTable();
+			//pMainWnd->m_pTableView->DisplayRecords(res, fields);
 		}
 	}
-
-
-
-	
 
 }

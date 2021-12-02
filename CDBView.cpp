@@ -248,8 +248,12 @@ void CDBView::OnTvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
 		//生成语句，增加表操作
 		if (name != "")
 		{
-			TableOp tbOp;
-			tbOp.CreateTable(name, GetSelectedDBName());
+			//TableOp tbOp;
+			//tbOp.CreateTable(name, GetSelectedDBName());
+			CString sql = CString("create table ") + name + CString(" (@ int)");
+			ParseSQL p;
+			p.setDB(GetSelectedDBName());
+			p.getSql(sql);
 		}
 		//更新数据库列表
 		this->OnOpenDB();
@@ -290,9 +294,11 @@ void CDBView::OnTvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
 				if (newName == newName.SpanExcluding(L"!@#$%^&*()_+-={}[]:\";'<>?/"))
 				{
 					CString oldName = GetSelectedTBName();
-					
-					TableOp tbOp;
-					if (tbOp.AlterTable(oldName, newName, GetSelectedDBName()))
+					CString sql = CString("rename table ") + oldName + " to " + newName;
+					ParseSQL p;
+					p.setDB(GetSelectedDBName());
+					p.getSql(sql);
+					if (true)
 					{
 						m_pTreeCtrl->SetItemText(hItem, newName);
 					}
@@ -396,6 +402,7 @@ void CDBView::OnbtnATable()
 	// TODO: 在此添加命令处理程序代码
 	//this->OnCrtTable();
 	m_pTreeCtrl->EditLabel(m_pTreeCtrl->GetSelectedItem());
+
 }
 
 
@@ -408,8 +415,12 @@ void CDBView::OnbtnDTable()
 	if (MessageBox(CString("操作会删除关于该表及表中所有数据，确定删除") + tbName + CString("？"), CString("删除表"), MB_OKCANCEL) == IDOK)
 	{
 		//执行删除操作
-		TableOp tbOp;
-		tbOp.DropTable(tbName, dbName);
+		/*TableOp tbOp;
+		tbOp.DropTable(tbName, dbName);*/
+		ParseSQL p;
+		p.setDB(dbName);
+		CString sql = CString("drop table ") + tbName;
+		p.getSql(sql);
 		//树形结构更新
 		this->DisplayDBList();
 

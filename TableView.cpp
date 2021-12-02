@@ -103,7 +103,10 @@ void CTableView::DisplayRecords(vector<CDataModel>& rcdlist, vector<FieldModel>&
 	m_ListCtrl->InsertColumn(0, CString("#"), LVCFMT_LEFT, 20);
 	for (int i = 1; i < columnNum; i++)
 	{
-		m_ListCtrl->InsertColumn(i, fieldList[i - 1].GetName(), LVCFMT_LEFT, 150);
+		if (i == 1) 
+			m_ListCtrl->InsertColumn(i, fieldList[i - 1].GetName(), LVCFMT_LEFT, 0);
+		else
+			m_ListCtrl->InsertColumn(i, fieldList[i-1].GetName(), LVCFMT_LEFT, 150);
 	}
 	
 	//显示记录
@@ -116,7 +119,7 @@ void CTableView::DisplayRecords(vector<CDataModel>& rcdlist, vector<FieldModel>&
 		m_ListCtrl->SetItemText(i, 0 , FileOp::IntegerToString(rcdlist[i].GetId()));
 		for (int j = 1; j < columnNum; j++)
 		{
-			m_ListCtrl->SetItemText(i, j, rcdlist[i].GetValue(fieldList[j - 1].GetName()));
+			m_ListCtrl->SetItemText(i, j, rcdlist[i].GetValue(fieldList[j-1].GetName()));
 		}
 	}
 }
@@ -133,8 +136,6 @@ void CTableView::DisplayFields(vector<FieldModel>& fieldList)
 	m_ListCtrl->InsertColumn(2, CString("字段名"), LVCFMT_LEFT, 100);
 	m_ListCtrl->InsertColumn(3, CString("类型"), LVCFMT_LEFT, 80);
 	m_ListCtrl->InsertColumn(4, CString("长度"), LVCFMT_LEFT, 50);
-	/*m_ListCtrl->InsertColumn(5, CString("最小值"), LVCFMT_LEFT, 100);
-	m_ListCtrl->InsertColumn(6, CString("最大值"), LVCFMT_LEFT, 100);*/
 	m_ListCtrl->InsertColumn(5, CString("默认值"), LVCFMT_LEFT, 100);
 	m_ListCtrl->InsertColumn(6, CString("主键"), LVCFMT_LEFT, 60);
 	m_ListCtrl->InsertColumn(7, CString("允许空值"), LVCFMT_LEFT, 100);
@@ -143,18 +144,18 @@ void CTableView::DisplayFields(vector<FieldModel>& fieldList)
 
 	m_ListCtrl->InsertColumn(0, CString("#"), LVCFMT_LEFT, 0);
 
-	for (int i = 0; i < fieldList.size(); ++i)
+	for (int i = 0; i < fieldList.size()-1; ++i)
 	{
-		m_ListCtrl->InsertItem(i, FileOp::IntegerToString(fieldList[i].GetId()));
-		m_ListCtrl->SetItemText(i, 2, FileOp::IntegerToString(fieldList[i].GetId()));
-		m_ListCtrl->SetItemText(i, 3, fieldList[i].GetName());
-		m_ListCtrl->SetItemText(i, 4, FileOp::GetTypeCString(fieldList[i].GetType()));
-		m_ListCtrl->SetItemText(i, 5,  FileOp::IntegerToString(fieldList[i].GetParam()));
-		m_ListCtrl->SetItemText(i, 6, fieldList[i].GetDefaultValue());
-		m_ListCtrl->SetItemText(i, 7, FileOp::BoolToString(fieldList[i].GetPrimaryKey()));
-		m_ListCtrl->SetItemText(i, 8, FileOp::BoolToString(fieldList[i].GetEmpty()));
-		m_ListCtrl->SetItemText(i, 9, FileOp::BoolToString(fieldList[i].GetUniqueKey()));
-		m_ListCtrl->SetItemText(i, 10, fieldList[i].GetNotes());
+		m_ListCtrl->InsertItem(i, FileOp::IntegerToString(fieldList[i+1].GetId()));
+		m_ListCtrl->SetItemText(i, 2, FileOp::IntegerToString(fieldList[i+1].GetId()));
+		m_ListCtrl->SetItemText(i, 3, fieldList[i+1].GetName());
+		m_ListCtrl->SetItemText(i, 4, FileOp::GetTypeCString(fieldList[i+1].GetType()));
+		m_ListCtrl->SetItemText(i, 5,  FileOp::IntegerToString(fieldList[i+1].GetParam()));
+		m_ListCtrl->SetItemText(i, 6, fieldList[i+1].GetDefaultValue());
+		m_ListCtrl->SetItemText(i, 7, FileOp::BoolToString(fieldList[i+1].GetPrimaryKey()));
+		m_ListCtrl->SetItemText(i, 8, FileOp::BoolToString(fieldList[i+1].GetEmpty()));
+		m_ListCtrl->SetItemText(i, 9, FileOp::BoolToString(fieldList[i+1].GetUniqueKey()));
+		m_ListCtrl->SetItemText(i, 10, fieldList[i+1].GetNotes());
 	}
 	
 }
@@ -186,9 +187,9 @@ void CTableView::OnDeleteField()
 
 			ParseSQL parseSql;
 			parseSql.setDB(dbName);
-			vector<CDataModel> m = parseSql.getSql(statement);
+			int m = parseSql.getSql(statement);
 
-			if (m.empty())
+			if (m)
 			{
 				MessageBox(CString("删除成功"), CString("成功"), MB_OK);
 				FieldOp fieldLogic(dbName, tbName);
@@ -198,19 +199,6 @@ void CTableView::OnDeleteField()
 			else
 				MessageBox(CString("删除失败"), CString("错误"), MB_OK);
 
-		
-			//FieldOp fieldLogic(dbName, tbName);
-
-			//int code = fieldLogic.DeleteField(fieldName);
-			//if (code == 1)
-			//{
-			//	vector<FieldModel> fieldList = fieldLogic.queryFieldsModel(dbName, tbName);
-			//	this->DisplayFields(fieldList);
-			//}
-			//else
-			//{
-			//	MessageBox(CString("删除字段错误！"), CString("错误"), MB_OK);
-			//}
 		}
 	}
 }
@@ -369,7 +357,7 @@ void CTableView::OnDeleteRecord()
 			pDBView->GetDBAndTableName(dbName, tbName);
 			CString statement;
 
-			statement = CString("delete from ") + tbName + CString(" where ")+ CString("#=") + m_ListCtrl->GetItemText(nItem, 0) + CString(";");
+			statement = CString("delete from ") + tbName + CString(" where ")+ CString("@=") + m_ListCtrl->GetItemText(nItem, 0) + CString(";");
 			ParseSQL parseSql;
 			parseSql.setDB(dbName);
 			parseSql.getSql(statement);

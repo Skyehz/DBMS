@@ -2,6 +2,7 @@
 #include "FieldOp.h"
 #include"FileOp.h"
 #include "ParseSQL.h"
+#include "ConstraintOp.h"
 //MFC判断目录下是否包含指定文件。 含文件名。
 #include <shlwapi.h>
 #include "DataOp.h"
@@ -23,12 +24,7 @@ FieldOp::~FieldOp(void)
 bool FieldOp::AddFields(vector<FieldModel> fields)
 {
 	vector<CString> nowFields = FileOp::ReadAll(tdfPath);
-	if (nowFields.empty()) {
-		FieldModel fm;
-		fm.SetId(0);
-		fm.SetName(CString("#"));
-		AddOneField(fm);
-	}
+	
 	if (!fields.empty())
 	{
 		for (int i = 0; i < fields.size(); i++)
@@ -107,7 +103,7 @@ bool FieldOp::ModifyField(FieldModel& newField, int type)
 
 bool FieldOp::ModifyFieldSQL(vector<CString> condition, int type) {
 	vector<CString> fieldlist = FileOp::ReadAll(tdfPath);
-	bool flag = false;
+	bool flag = true;
 	if (fieldlist.empty())
 		return false;
 	else
@@ -146,6 +142,7 @@ bool FieldOp::ModifyFieldSQL(vector<CString> condition, int type) {
 			}
 			//设置为非空
 			else if (type == ALTER_ADD_CONSTRANIT_NOTNULL && vfield[1] == condition[0]) {
+				CString cstName = CString("cstNN@") + condition[0];
 				FieldModel newField(FileOp::StringToInteger(vfield[0]), //id
 					vfield[1], //name
 					FileOp::StringToInteger(vfield[2]),	//类型
@@ -156,10 +153,13 @@ bool FieldOp::ModifyFieldSQL(vector<CString> condition, int type) {
 					vfield[8], //默认值
 					vfield[9], //注释
 					1);	//非空
+				ConstraintOp cstOp(dbName, tbName);
+				cstOp.getOneCst(vfield[1], cstName, type);
 				return ModifyField(newField, type);
 			}
-			//设置为主键
+			//设置为主键(有约束名)
 			else if (type == ALTER_ADD_CONSTRANIT_PK ) {
+				CString cstName = condition[0];
 				vector<CString> fieldNames = FileOp::StrSplit(condition[1], CString(","));
 				for (int j = 0; j < fieldNames.size(); j++) {
 					if (vfield[1] == fieldNames[j]) {
@@ -173,13 +173,18 @@ bool FieldOp::ModifyFieldSQL(vector<CString> condition, int type) {
 							vfield[8], //默认值
 							vfield[9], //注释
 							FileOp::StringToInteger(vfield[10]));	//非空
+						//添加约束条件
+						ConstraintOp cstOp(dbName, tbName);
+						cstOp.getOneCst(vfield[1], cstName, type);
 						ModifyField(newField, type);
+						//flag = true;
 						break;
 					}
 				}
 			}
-			//设置为唯一值
+			//设置为唯一值(有约束名)
 			else if (type == ALTER_ADD_CONSTRANIT_UNIQUE) {
+				CString cstName = condition[0];
 				vector<CString> fieldNames = FileOp::StrSplit(condition[1], CString(","));
 				for (int j = 0; j < fieldNames.size(); j++) {
 					if (vfield[1] == fieldNames[j]) {
@@ -193,24 +198,37 @@ bool FieldOp::ModifyFieldSQL(vector<CString> condition, int type) {
 							vfield[8], //默认值
 							vfield[9], //注释
 							FileOp::StringToInteger(vfield[10]));	//非空
+						ConstraintOp cstOp(dbName, tbName);
+						cstOp.getOneCst(vfield[1], cstName, type);
 						ModifyField(newField, type);
+						//flag = true ;
 						break;
 					}
 				}
 			}
 			//设置默认值
 			else if (type == ALTER_ADD_CONSTRANIT_DEFAULT && vfield[1] == condition[0]) {
-				FieldModel newField(FileOp::StringToInteger(vfield[0]), //id
-					vfield[1], //name
-					FileOp::StringToInteger(vfield[2]),	//类型
-					FileOp::StringToInteger(vfield[3]),	//长度
-					FileOp::StringToInteger(vfield[5]), //完整性
-					FileOp::StringToInteger(vfield[6]),	//主键
-					FileOp::StringToInteger(vfield[7]),	//唯一值
-					condition[2], //默认值
-					vfield[9], //注释
-					FileOp::StringToInteger(vfield[10]));	//非空
-				return ModifyField(newField, type);
+				CString cstName = CString("cstDEFAULT@") + condition[0];
+				//若默认值不符合字段类型
+				CDataOp dataop(dbName, tbName);
+				FieldModel currField(*ite);
+				if (dataop.IntegrityVerify1(condition[2], currField) == true) {
+					FieldModel newField(FileOp::StringToInteger(vfield[0]), //id
+						vfield[1], //name
+						FileOp::StringToInteger(vfield[2]),	//类型
+						FileOp::StringToInteger(vfield[3]),	//长度
+						FileOp::StringToInteger(vfield[5]), //完整性
+						FileOp::StringToInteger(vfield[6]),	//主键
+						FileOp::StringToInteger(vfield[7]),	//唯一值
+						condition[2], //默认值
+						vfield[9], //注释
+						FileOp::StringToInteger(vfield[10]));	//非空
+					ConstraintOp cstOp(dbName, tbName);
+					cstOp.getOneCst(vfield[1], cstName, type);
+					return ModifyField(newField, type);
+				}
+				
+				
 			}
 
 		}
@@ -221,7 +239,7 @@ bool FieldOp::ModifyFieldSQL(vector<CString> condition, int type) {
 }
 
 
-
+//删除字段
 bool FieldOp::dropField(CString& dbName, CString& tableName, CString& fieldName)
 {
 	//判断表定义文件tdf是否存在
@@ -231,8 +249,11 @@ bool FieldOp::dropField(CString& dbName, CString& tableName, CString& fieldName)
 	int number = IsFiledExist(dbName, tableName, fieldName);
 	if (number == -1)
 		return false;
-	//判断是否有索引在使用当前字段（暂定）
-	//如果有索引则删除当前字段(暂定)
+	
+	//删除该字段的记录
+	CDataOp dataop(dbName, tableName);
+	//dataop.DeleteFieldRecord(fieldName)
+
 
 	//删除字段信息
 	CString filePath = CString("./dbms_root/data") + CString("/") + dbName + CString("/") + tableName + CString(".tdf");

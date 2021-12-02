@@ -154,14 +154,14 @@ void DataInsertDlg::OnBnClickedOk()
 			for (vector<FieldModel>::iterator ite = m_vFieldList.begin(); ite != m_vFieldList.end(); ++ite)
 			{
 				record = m_record->GetValue(ite->GetName());
-				statement = CString("update ") + m_sTableName + CString(" set ") + ite->GetName()+CString("=")+record+CString(" where ")+CString("#=")+FileOp::IntegerToString(m_record->GetId()) + CString(";");
+				statement = CString("update ") + m_sTableName + CString(" set ") + ite->GetName()+CString("=")+record+CString(" where ")+CString("@=")+FileOp::IntegerToString(m_record->GetId()) + CString(";");
+				ParseSQL parseSql;
+				parseSql.setDB(m_sDBName);
+				parseSql.getSql(statement);
 			}
-			record = record.Left(record.GetLength() - 1);
-			
-			ParseSQL parseSql;
-			parseSql.setDB(m_sDBName);
-			parseSql.getSql(statement);
 			RefreshRecord();
+
+			
 		}
 
 
